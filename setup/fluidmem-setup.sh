@@ -7,7 +7,7 @@ fi
 
 if [[ "$(uname -m)" =~ aarch64.* ]]; then
   echo "**************************************************"
-  echo "WARNING: The xio library will not compile on ARM. Proceeding anyway"
+  echo "WARNING: FluidMem will not compile on ARM. Proceeding anyway"
   echo "**************************************************"
 fi
 
@@ -18,27 +18,37 @@ elif [[ "$(cat /etc/lsb-release | grep DISTRIB_ID)" =~ .*Ubuntu.* ]]; then
 fi
 
 if [ -n "$SSD" ] && [ -e /dev/$SSD ]; then
-  BUILD_DIR=/ssd/build/accelio
+  BUILD_DIR=/ssd/build/fluidmem
   sudo mkdir -p $BUILD_DIR
   sudo chown $USER:$(id -g) $BUILD_DIR
-  ln -s $BUILD_DIR $HOME/accelio
+  ln -s $BUILD_DIR $HOME/fluidmem
 else
-  BUILD_DIR=$HOME/accelio
+  BUILD_DIR=$HOME/fluidmem	
   mkdir $BUILD_DIR
 fi
 
 
-build_accelio () {
-  git clone https://github.com/accelio/accelio.git ${BUILD_DIR}
+build_fluidmem () {
+  git clone https://github.com/blakecaldwell/fluidmem.git ${BUILD_DIR}
   cd ${BUILD_DIR}
   ./autogen.sh \
-    && ./configure \
-    && make \
-    && sudo make install
+    && ./configure --enable-ramcloud \
+      --disable-trace \
+      --disable-debug \
+      --disable-lock_debug \
+      --enable-pagecache \
+      --enable-pagecache-zeropageopt \
+      --enable-threadedprefetch \
+      --enable-threadedwrite \
+      --enable-affinity \
+      --enable-asynread \
+      --disable-timing \
+      --prefix=$(pwd)/build
+    && make -j10 install
 } 
 
-build_accelio
+build_fluidmem
 
 echo "*********************************"
-echo "Finished setting up Accelio (xio)"
+echo "Finished setting up FluidMem"
 echo "*********************************"

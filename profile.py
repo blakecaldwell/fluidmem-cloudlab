@@ -76,11 +76,11 @@ pc.verifyParameters()
 
 firstNode = "%s-%d" % (params.computeHostBaseName,1)
 tourDescription = \
-  "A configurable number of nodes with RDMA libraries and parallel shell (pdsh) installed. The following distributions are valid: " + '\n' + \
-  " 1. x86_64 w/ Ubuntu 14.04 (default)" + '\n' + \
+  "A configurable number of nodes for running FluidMem with RDMA libraries and parallel shell (pdsh) installed. The following distributions are valid: " + '\n' + \
+  " 1. x86_64 w/ Ubuntu 16.04 (default)" + '\n' + \
   " 2. x86_64 w/ Centos 7.1 (no pmem kernel)" + '\n' + \
   " 3. ARM64 w/ Ubuntu 16.04 (nvml or xio will not compile)" + '\n' + '\n' + \
-  "Note: A message at login will be displayed about next steps for configuration (pmem, grappa, accelio)" + '\n' 
+  "Note: A message at login will be displayed about next steps for configuration (kernel, ramcloud, fluidmem)" + '\n' 
 
 tourInstructions = \
   "Log in with your cloudlab account, authenticating by SSH public key. Follow instructions given by login message."

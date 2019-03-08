@@ -11,7 +11,7 @@ March 3, 2019
  - Membership in a project. Start a new project: https://cloudlab.us/signup.php
 
 ## Instantiating an experiment
- 1. Go to https://www.cloudlab.us/p/c1b23255-a044-11e5-aa8d-d35d0e0aeb82
+ 1. Go to https://www.cloudlab.us/p/99fca391-3dd1-11e9-897b-e4434b2381fc
  2. Follow the prompts, choosing the number of nodes and the OS distro. Any of the available
     clusters should work for this profile, but typically Utah APT has the most nodes free.
     The emulab cluster has much older hardware.
@@ -20,10 +20,3 @@ March 3, 2019
  - Login to the node with the ssh key provided to cloudlab
  - A message at login will print out a command to run to start phase 2. This command can be run in parallel across all nodes in the cluster using pdsh
  - The script may instruct you to reboot the machine afterwards. This would need to be done on all systems in the cluster (again using pdsh)
-
-## Development
-If making changes to the scripts in setup/, after cloning this repository, run `./create-tarball.sh` to create
-`setup.tar.gz` which is what the CloudLab profile downloads and extracts on boot. Push changes to the repo master branch.
-
-## Pull requests
- * Submit without .tar.gz

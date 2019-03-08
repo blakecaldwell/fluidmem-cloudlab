@@ -153,7 +153,7 @@ mgmtlan.best_effort = True
 #
 
 #x86_ubuntu_disk_image = 'urn:publicid:IDN+utah.cloudlab.us+image+emulab-ops//UBUNTU14-64-STD'
-x86_ubuntu_disk_image = 'urn:publicid:IDN+emulab.net+image+emulab-ops:UBUNTU18-64-STD '
+x86_ubuntu_disk_image = 'urn:publicid:IDN+utah.cloudlab.us+image+emulab-ops:UBUNTU18-64-STD'
 #x86_ubuntu_disk_image = 'urn:publicid:IDN+utah.cloudlab.us+image+cloudlab-PG0:x86-ubuntu15-10:0'
 #x86_centos_disk_image = 'urn:publicid:IDN+emulab.net+image+emulab-ops:CENTOS71-64-STD'
 x86_centos_disk_image = 'urn:publicid:IDN+emulab.net+image+emulab-ops:CENTOS7-64-STD'

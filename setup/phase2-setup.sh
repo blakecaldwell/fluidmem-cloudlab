@@ -21,7 +21,7 @@ if [[ $EUID -eq 0 ]]; then
   die "This script should be run as a regular user, not with sudo!"
 fi
 
-SUPPORTED_TYPES="fluidmem ramcloud all"
+SUPPORTED_TYPES="kernel docker fluidmem ramcloud all"
 
 [[ $1 ]] || die "No setup type specified. Supported types: ${SUPPORTED_TYPES}"
 
@@ -37,6 +37,8 @@ elif [ $TYPE == "ramcloud" ]; then
   /usr/local/bin/ramcloud-setup.sh
 elif [ $TYPE == "fluidmem" ]; then
   /usr/local/bin/fluidmem-setup.sh
+elif [ $TYPE == "docker" ]; then
+  /usr/local/bin/docker-setup.sh
 elif [ $TYPE == "all" ]; then
   touch /tmp/kernel-lock
   /usr/local/bin/kernel-setup.sh &
@@ -47,6 +49,12 @@ elif [ $TYPE == "all" ]; then
   touch /tmp/ramcloud-lock
   /usr/local/bin/ramcloud-setup.sh &
   while [ -e /tmp/ramcloud-lock ]; do
+    sleep 1
+  done
+
+  touch /tmp/docker-lock
+  /usr/local/bin/docker-setup.sh &
+  while [ -e /tmp/docker-lock ]; do
     sleep 1
   done
 

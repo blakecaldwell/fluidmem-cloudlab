@@ -42,12 +42,10 @@ install_zookeeper_centos() {
 prepare_ramcloud_ubuntu() {
   set -e
   sudo apt-get update
-  sudo apt-get -y install build-essential git-core libcppunit-dev libcppunit-doc doxygen  protobuf-compiler libprotobuf-dev libcrypto++-dev libpcrecpp0 libpcre++-dev libssl-dev libpcre3-dev
-  sudo apt-get -y install zookeeper zookeeper-bin zookeeperd libzookeeper-mt2 libzookeeper-mt-dev
+  sudo apt-get -y install build-essential git-core libcppunit-dev libcppunit-doc doxygen  protobuf-compiler libprotobuf-dev libcrypto++-dev libpcrecpp0v5 libpcre++-dev libssl-dev libpcre3-dev zookeeper zookeeper-bin zookeeperd libzookeeper-mt2 libzookeeper-mt-dev libboost-all-dev openjdk-8-jdk
   sudo service zookeeper start
-  sudo apt-get -y install libboost1.54-all-dev
 
-  set +x
+  set +e
 }
 
 build_ramcloud() {
@@ -65,9 +63,16 @@ build_ramcloud() {
   git submodule update --init --recursive && \
   ln -s obj.b_$COMMIT obj.master  && \
   sudo make install -j4 INFINIBAND=yes DEBUG=no
+}
 
+install_ramcloud_centos() {
+  echo "ERROR: not implemented yet."
+  exit 1
+}
+
+install_ramcloud_ubuntu() {
   wget https://raw.githubusercontent.com/blakecaldwell/fluidmem-cloudlab/master/setup/ramcloud-default &> /dev/null
-  sudo cp ramcloud-default /etc/default/ramcloud
+  sudo cp /tmp/setup/ramcloud-default /etc/default/ramcloud
 
   # get number of replicas
   HOSTS=$(cat /etc/hosts|grep cp-|awk '{print $4}'|sort)
@@ -77,7 +82,7 @@ build_ramcloud() {
   done
 
   # get our hostname
-  IP=$(route -n|awk '$1 == "0.0.0.0" {print $8}'| xargs ip addr show dev|grep inet|grep -v inet6|sed 's/.*inet \(.*\)\/.*/\1/')
+  IP=$(route -n|awk '$1 == "192.168.0.0" {print $8}'| xargs ip addr show dev|grep inet|grep -v inet6|sed 's/.*inet \(.*\)\/.*/\1/')
   NAME=$(awk "\$1 == \"$IP\" {print \$NF}" /etc/hosts)
   echo "setting up ramcloud config for $NAME"
 
@@ -88,15 +93,20 @@ build_ramcloud() {
   if [[ "$NAME" -eq "cp-1" ]]; then
     echo "running both coordinator and server"
     wget https://raw.githubusercontent.com/blakecaldwell/fluidmem-cloudlab/master/setup/ramcloud-coordinator.service &> /dev/null
-    sudo cp ramcloud-coordinator.service /usr/lib/systemd/system/ramcloud-coordinator.service
+    sudo cp /tmp/setup/ramcloud-coordinator.service /lib/systemd/system/ramcloud-coordinator.service
     sudo systemctl enable ramcloud-coordinator
   else
     echo "just running server"
   fi
 
   wget https://raw.githubusercontent.com/blakecaldwell/fluidmem-cloudlab/master/setup/ramcloud-server.service &> /dev/null
-  sudo cp ramcloud-server.service /usr/lib/systemd/system/ramcloud-server.service
+  sudo cp /tmp/setup/ramcloud-server.service /lib/systemd/system/ramcloud-server.service
   sudo systemctl enable ramcloud-server
+
+  cat <<EOF | sudo tee /etc/ld.so.conf.d/ramcloud-x86_64.conf > /dev/null
+/usr/lib/ramcloud
+EOF
+  sudo ldconfig
 
 }
 
@@ -125,21 +135,24 @@ prepare_ramcloud_centos () {
 
 }
 
+set -e
 if [[ "$(cat /etc/lsb-release | grep DISTRIB_ID)" =~ .*Ubuntu.* ]]; then
   prepare_ramcloud_ubuntu
-
-}
+  build_ramcloud
+  install_ramcloud_ubuntu
 elif [[ "$(cat /etc/redhat-release)" =~ CentOS.* ]]; then
   install_zookeeper_centos
   prepare_ramcloud_centos
+  build_ramcloud
+  install_ramcloud_centos
 fi
+
+
 
 # let other installs continue
 rm -f /tmp/ramcloud-lock
 
-build_ramcloud
-
-
 echo "*********************************"
 echo "Finished setting up RAMCloud"
 echo "*********************************"
+set +e

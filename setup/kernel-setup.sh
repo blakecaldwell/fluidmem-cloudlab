@@ -24,18 +24,15 @@ build_kernel_ubuntu() {
 }
 
 install_kernel_ubuntu() {
-  set -e
   echo "**************************************************"
 
   echo "Installing Linux kernel 4.20 with userfaultfd extensions..."
   cd $HOME
-  cd kerel-4.20+
   sudo dpkg -i linux-headers-4.20.0+_4.20.0+-1_amd64.deb linux-libc-dev_4.20.0+-1_amd64.deb linux-image-4.20.0+_4.20.0+-1_amd64.deb 
   sudo update-grub2
   echo "done" set +e
   echo "**************************************************"
 
-  set +e
 }
 
 install_kernel_centos() {
@@ -64,12 +61,16 @@ install_kernel_centos() {
 
 
 if [[ "$(cat /etc/lsb-release | grep DISTRIB_ID)" =~ .*Ubuntu.* ]]; then
+  export DEBIAN_FRONTEND=noninteractive
 
-  sudo apt-get update && apt-get upgrade
+  # make sure all commamds succeed
+  set -e
+  sudo apt-get update
   sudo apt-get install -y build-essential libncurses5-dev gcc libssl-dev grub2 bc
   #build_kernel_ubuntu
-  install_kernel_ubuntu 
-}
+
+  install_kernel_ubuntu
+
 elif [[ "$(cat /etc/redhat-release)" =~ CentOS.* ]]; then
   sudo yum groupinstall -y "Development Tools" &&     yum install -y     openssl     openssl-devel     bison     flex     make     gcc     hmaccalc     zlib-devel     binutils-devel     elfutils-libelf-devel     ncurses-devel     rpm-build     bc     git &&     yum clean all
   if [[ ! "$(uname -r)" =~ 4.20 ]]; then
@@ -106,9 +107,9 @@ else
   fi
 fi
 
-if [ ! -e $BUILD_DIR/.git ]; then
-  build_kernel
-fi
+#if [ ! -e $BUILD_DIR/.git ]; then
+#  build_kernel
+#fi
 
 # let other installs continue
 rm -f /tmp/kernel-lock

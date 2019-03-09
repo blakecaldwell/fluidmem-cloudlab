@@ -31,6 +31,7 @@ fi
 build_fluidmem () {
   git clone https://github.com/blakecaldwell/fluidmem.git ${BUILD_DIR}
   cd ${BUILD_DIR}
+  git checkout ubuntu_dev
   ./autogen.sh \
     && ./configure --enable-ramcloud \
       --disable-trace \
@@ -43,7 +44,7 @@ build_fluidmem () {
       --enable-affinity \
       --enable-asynread \
       --disable-timing \
-      --prefix=$(pwd)/build
+      --prefix=$(pwd)/build \
     && make -j10 install
 } 
 

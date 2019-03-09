@@ -48,13 +48,13 @@ elif [ -f $FLAG ]; then
 
   else
 
-    echo "*************************************************************************"
+    echo "***********************************************************************************"
     echo -e "RDMA setup complete"
     echo -e "Your cluster has the following hosts:\n\
 $HOSTS\n"
     echo -e "Run the following command to start second phase of setup.\n\
-pdsh -w cp-[1-$i] /usr/local/bin/phase2-setup.sh [ pmem | accelio | grappa | all ]"
-    echo "*************************************************************************"
+pdsh -w cp-[1-$i] /usr/local/bin/phase2-setup.sh [ kernel | ramcloud | docker| fluidmem | all ]"
+    echo "***********************************************************************************"
 
   fi
 fi
@@ -62,13 +62,13 @@ EOF
 chmod +x /etc/profile.d/firstboot.sh
 
 cp /tmp/setup/phase2-setup.sh /usr/local/bin/phase2-setup.sh 
-cp /tmp/setup/pmem-setup.sh /usr/local/bin/pmem-setup.sh 
-cp /tmp/setup/accelio-setup.sh /usr/local/bin/accelio-setup.sh 
-cp /tmp/setup/grappa-setup.sh /usr/local/bin/grappa-setup.sh 
+cp /tmp/setup/kernel-setup.sh /usr/local/bin/kernel-setup.sh 
+cp /tmp/setup/ramcloud-setup.sh /usr/local/bin/ramcloud-setup.sh 
+cp /tmp/setup/fluidmem-setup.sh /usr/local/bin/fluidmem-setup.sh 
 chmod +x /usr/local/bin/phase2-setup.sh
-chmod +x /usr/local/bin/pmem-setup.sh
-chmod +x /usr/local/bin/accelio-setup.sh
-chmod +x /usr/local/bin/grappa-setup.sh
+chmod +x /usr/local/bin/kernel-setup.sh
+chmod +x /usr/local/bin/ramcloud-setup.sh
+chmod +x /usr/local/bin/fluidmem-setup.sh
 
 # Any SSDs to use?
 SSD=$(lsblk -o NAME,MODEL|grep SSD | awk 'NR==1{print $1}')
@@ -94,9 +94,11 @@ if [[ "$(cat /etc/redhat-release)" =~ CentOS.* ]]; then
 
 elif [[ "$(cat /etc/lsb-release | grep DISTRIB_ID)" =~ .*Ubuntu.* ]]; then
 
+  locale-gen en_US
   export DEBIAN_FRONTEND=noninteractive
 
   # for building
+  apt-get update
   apt-get install -y libtool autoconf automake build-essential vim
 
   # for rdma
@@ -111,7 +113,7 @@ elif [[ "$(cat /etc/lsb-release | grep DISTRIB_ID)" =~ .*Ubuntu.* ]]; then
   # get last octet of IP address
   SUFFIX=$(ip a| grep "eth\|enp"|grep inet|awk '{print $2}'|cut -d '.' -f4|cut -d '/' -f1)
 
-cat <<EOF | tee /etc/network/interfaces > /dev/null
+  cat <<EOF | tee /etc/network/interfaces > /dev/null
 auto ib0
 iface ib0 inet static
     address 10.0.0.${SUFFIX}/24
@@ -120,8 +122,8 @@ iface ib0 inet static
     pre-up modprobe ib_uverbs
     pre-up modprobe ib_mthca
     pre-up modprobe ib_ipoib
-fi
 EOF
+fi
 
 # set the amount of locked memory. will require a reboot
 cat <<EOF  | tee /etc/security/limits.d/90-rmda.conf > /dev/null

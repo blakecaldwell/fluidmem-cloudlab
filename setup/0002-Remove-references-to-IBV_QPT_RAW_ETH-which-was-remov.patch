@@ -31,7 +31,7 @@ index 3a98fae..801dfee 100644
 --- a/src/Infiniband.cc
 +++ b/src/Infiniband.cc
 @@ -518,7 +518,8 @@ Infiniband::QueuePair::QueuePair(Infiniband& infiniband, ibv_qp_type type,
-       handshakeSin()
+       peerLid(0)
  {
      snprintf(peerName, sizeof(peerName), "?unknown?");
 -    if (type != IBV_QPT_RC && type != IBV_QPT_UD && type != IBV_QPT_RAW_ETH)

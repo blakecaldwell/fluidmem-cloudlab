@@ -43,7 +43,7 @@ elif [ -f $FLAG ]; then
     echo "***********************************************************"
     echo -e "RDMA setup complete"
     echo -e "Run the following command to start second phase of setup.\n\
-/usr/local/bin/phase2-setup.sh [ pmem | accelio | grappa | all ]"
+/usr/local/bin/phase2-setup.sh [ kernel | ramcloud | fluidmem | docker | all ]"
     echo "***********************************************************"
 
   else

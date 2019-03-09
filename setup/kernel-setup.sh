@@ -12,11 +12,12 @@ build_kernel_ubuntu() {
 
   echo "Building Linux kernel 4.20 with userfaultfd extensions..." 
   cd $HOME
+  KERNEL_VERSION="4.20-rc7"
   git clone https://github.com/blakecaldwell/userfault-kernel.git kernel-4.20+
   wget https://raw.githubusercontent.com/blakecaldwell/fluidmem-cloudlab/master/setup/kernel-config-4.20 &> /dev/null
-  cp kernel-config-4.20 kernel-4.20+/.config
-  cd kernel-4.20+
-  git checkout userfault_4.20
+  cp kernel-config-4.20 kernel-${KERNEL_VERSION}+/.config
+  cd kernel-${KERNEL_VERSION}+
+  git checkout userfault_${KERNEL_VERSION}
   make olddefconfig
   make -j15 deb-pkg
   echo "done" 

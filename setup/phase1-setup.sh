@@ -100,14 +100,28 @@ elif [[ "$(cat /etc/lsb-release | grep DISTRIB_ID)" =~ .*Ubuntu.* ]]; then
   apt-get install -y libtool autoconf automake build-essential vim
 
   # for rdma
-  apt-get install -y ibverbs-utils rdmacm-utils infiniband-diags perftest libipathverbs1 libmlx4-1
+  apt-get install -y ibverbs-utils rdmacm-utils infiniband-diags perftest libipathverbs1 libmlx4-1 libmthca1 
   apt-get install -y librdmacm-dev libibverbs-dev numactl libnuma-dev libaio-dev libevent-dev libmlx4-dev
   apt-get install -y pdsh
 
   for module in ib_umad ib_uverbs rdma_cm rdma_ucm ib_qib mlx4_core mlx4_en mlx4_ib; do
     echo $module | tee -a /etc/modules
   done
+
+  # get last octet of IP address
+  SUFFIX=$(ip a| grep "eth\|enp"|grep inet|awk '{print $2}'|cut -d '.' -f4|cut -d '/' -f1)
+
+cat <<EOF | tee /etc/network/interfaces > /dev/null
+auto ib0
+iface ib0 inet static
+    address 10.0.0.${SUFFIX}/24
+    pre-up modprobe mlx4_ib
+    pre-up modprobe ib_umad
+    pre-up modprobe ib_uverbs
+    pre-up modprobe ib_mthca
+    pre-up modprobe ib_ipoib
 fi
+EOF
 
 # set the amount of locked memory. will require a reboot
 cat <<EOF  | tee /etc/security/limits.d/90-rmda.conf > /dev/null

@@ -31,8 +31,8 @@ pc.defineParameter("archType","Architecture Type",
                    portal.ParameterType.STRING,"x86_64",[("arm","ARM"),("x86_64","Intel x86_64")],
                    longDescription="Either ARM64 (X-GENE, aarch64) or Intel x86_64 for the system architecture type.")
 pc.defineParameter("OSType","OS Type",
-                   portal.ParameterType.STRING,"ubuntu",[("centos","CentOS 7.1"),("ubuntu","Ubuntu")],
-                   longDescription="Choose either CentOS 7.1 or Ubuntu for the OS distribution.")
+                   portal.ParameterType.STRING,"ubuntu",[("centos","CentOS 7.1"),("ubuntu","Ubuntu 16.04")],
+                   longDescription="Choose either CentOS 7.1 or Ubuntu 16.04 for the OS distribution.")
 pc.defineParameter("computeHostBaseName", "Base name of compute node(s)",
                    portal.ParameterType.STRING, "cp", advanced=True,
                    longDescription="The base string of the short name of the compute nodes (node names will look like cp-1, cp-2, ... You shold leave this alone unless you really want the hostname to change.")
@@ -78,8 +78,8 @@ firstNode = "%s-%d" % (params.computeHostBaseName,1)
 tourDescription = \
   "A configurable number of nodes for running FluidMem with RDMA libraries and parallel shell (pdsh) installed. The following distributions are valid: " + '\n' + \
   " 1. x86_64 w/ Ubuntu 16.04 (default)" + '\n' + \
-  " 2. x86_64 w/ Centos 7.1 (no pmem kernel)" + '\n' + \
-  " 3. ARM64 w/ Ubuntu 16.04 (nvml or xio will not compile)" + '\n' + '\n' + \
+  " 2. x86_64 w/ Centos 7.1" + '\n' + \
+  " 3. ARM64 w/ Ubuntu 14.04 (not ready)" + '\n' + '\n' + \
   "Note: A message at login will be displayed about next steps for configuration (kernel, ramcloud, fluidmem)" + '\n' 
 
 tourInstructions = \
@@ -153,7 +153,7 @@ mgmtlan.best_effort = True
 #
 
 #x86_ubuntu_disk_image = 'urn:publicid:IDN+utah.cloudlab.us+image+emulab-ops//UBUNTU14-64-STD'
-x86_ubuntu_disk_image = 'urn:publicid:IDN+utah.cloudlab.us+image+emulab-ops:UBUNTU18-64-STD'
+x86_ubuntu_disk_image = 'urn:publicid:IDN+emulab.net+image+emulab-ops//UBUNTU16-64-STD'
 #x86_ubuntu_disk_image = 'urn:publicid:IDN+utah.cloudlab.us+image+cloudlab-PG0:x86-ubuntu15-10:0'
 #x86_centos_disk_image = 'urn:publicid:IDN+emulab.net+image+emulab-ops:CENTOS71-64-STD'
 x86_centos_disk_image = 'urn:publicid:IDN+emulab.net+image+emulab-ops:CENTOS7-64-STD'

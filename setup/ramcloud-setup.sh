@@ -28,18 +28,26 @@ else
 fi
 
 install_zookeeper_centos() {
+  set -e
+  cd $HOME
   curl -O http://archive.cloudera.com/cdh5/one-click-install/redhat/6/x86_64/cloudera-cdh-5-0.x86_64.rpm && \
     sudo rpm --import http://archive.cloudera.com/cdh5/redhat/6/x86_64/cdh/RPM-GPG-KEY-cloudera  && \
     sudo yum localinstall -y ./cloudera-cdh-5-0.x86_64.rpm && \
     sudo yum install -y zookeeper-native epel-release && \
     rm -f /cloudera-cdh-5-0.x86_64.rpm
+  set +e
 }
 
 
 prepare_ramcloud_ubuntu() {
+  set -e
   sudo apt-get update
   sudo apt-get -y install build-essential git-core libcppunit-dev libcppunit-doc doxygen  protobuf-compiler libprotobuf-dev libcrypto++-dev libpcrecpp0 libpcre++-dev libssl-dev libpcre3-dev
-  sudo apt-get -y install infiniband-diags libibverbs-dev ibverbs-utils perftest libmlx4-1 libmthca1 
+  sudo apt-get -y install zookeeper zookeeper-bin zookeeperd libzookeeper-mt2 libzookeeper-mt-dev
+  sudo service zookeeper start
+  sudo apt-get -y install libboost1.54-all-dev
+
+  set +x
 }
 
 build_ramcloud() {
@@ -57,6 +65,38 @@ build_ramcloud() {
   git submodule update --init --recursive && \
   ln -s obj.b_$COMMIT obj.master  && \
   sudo make install -j4 INFINIBAND=yes DEBUG=no
+
+  wget https://raw.githubusercontent.com/blakecaldwell/fluidmem-cloudlab/master/setup/ramcloud-default &> /dev/null
+  sudo cp ramcloud-default /etc/default/ramcloud
+
+  # get number of replicas
+  HOSTS=$(cat /etc/hosts|grep cp-|awk '{print $4}'|sort)
+  let REPLICAS=0
+  for each in $HOSTS; do
+    (( REPLICAS += 1 ))
+  done
+
+  # get our hostname
+  IP=$(route -n|awk '$1 == "0.0.0.0" {print $8}'| xargs ip addr show dev|grep inet|grep -v inet6|sed 's/.*inet \(.*\)\/.*/\1/')
+  NAME=$(awk "\$1 == \"$IP\" {print \$NF}" /etc/hosts)
+  echo "setting up ramcloud config for $NAME"
+
+  COORDINATOR_IP=10.0.0.1
+  sudo sed -i -e "s/%%COORDINATOR_IP%%/${COORDINATOR_IP}/" -e "s/%%REPLICAS%%/$REPLICAS/" \
+      /etc/default/ramcloud
+
+  if [[ "$NAME" -eq "cp-1" ]]; then
+    echo "running both coordinator and server"
+    wget https://raw.githubusercontent.com/blakecaldwell/fluidmem-cloudlab/master/setup/ramcloud-coordinator.service &> /dev/null
+    sudo cp ramcloud-coordinator.service /usr/lib/systemd/system/ramcloud-coordinator.service
+    sudo systemctl enable ramcloud-coordinator
+  else
+    echo "just running server"
+  fi
+
+  wget https://raw.githubusercontent.com/blakecaldwell/fluidmem-cloudlab/master/setup/ramcloud-server.service &> /dev/null
+  sudo cp ramcloud-server.service /usr/lib/systemd/system/ramcloud-server.service
+  sudo systemctl enable ramcloud-server
 
 }
 

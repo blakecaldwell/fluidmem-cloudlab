@@ -1,0 +1,17 @@
+[Unit]
+Description=RAMCloud server
+After=ramcloud-coordinator.service
+
+[Service]
+EnvironmentFile=-/etc/default/ramcloud
+ExecStart=/usr/bin/server \
+          $SERVER_LOCATOR \
+          $EXTERNAL_STORAGE \
+          $MASTER_MEMORY \
+          $REPLICAS \
+          $MASTER_ONLY
+#LimitCORE=infinity
+RestartSec=5s
+
+[Install]
+WantedBy=multi-user.target

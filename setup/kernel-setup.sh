@@ -1,5 +1,6 @@
 #!/bin/bash  
 
+
 if [[ $EUID -eq 0 ]]; then
   echo "This script should be run as a regular user, not with sudo!"
   exit 1
@@ -10,7 +11,7 @@ build_kernel_ubuntu() {
   echo "**************************************************"
 
   echo "Building Linux kernel 4.20 with userfaultfd extensions..." 
-
+  cd $HOME
   git clone https://github.com/blakecaldwell/userfault-kernel.git kernel-4.20+
   wget https://raw.githubusercontent.com/blakecaldwell/fluidmem-cloudlab/master/setup/kernel-config-4.20 &> /dev/null
   cp kernel-config-4.20 kernel-4.20+/.config
@@ -27,13 +28,19 @@ install_kernel_ubuntu() {
   echo "**************************************************"
 
   echo "Installing Linux kernel 4.20 with userfaultfd extensions..."
+  cd $HOME
   cd kerel-4.20+
   sudo dpkg -i linux-headers-4.20.0+_4.20.0+-1_amd64.deb linux-libc-dev_4.20.0+-1_amd64.deb linux-image-4.20.0+_4.20.0+-1_amd64.deb 
+  sudo update-grub2
   echo "done" set +e
+  echo "**************************************************"
+
+  set +e
 }
 
 install_kernel_centos() {
   set -e
+  cd $HOME
   git clone https://github.com/blakecaldwell/userfault-kernel.git
   wget https://raw.githubusercontent.com/blakecaldwell/fluidmem-cloudlab/master/setup/kernel-config-4.20 &> /dev/null
   cp kernel-config-4.20 userfault-kernel/.config
@@ -44,10 +51,12 @@ install_kernel_centos() {
   echo "Building Linux kernel 4.20 with userfaultfd extensions..." 
   make -j16 rpm-pkg > /dev/null 2>&1
   echo "done"
-  echo "InstallingLinux kernel 4.20 with userfaultfd extensions..." 
+  echo "**************************************************"
+  echo "Installing Linux kernel 4.20 with userfaultfd extensions..." 
   sudo rpm -e --nodeps kernel-headers
   sudo rpm -ivh ~/rpmbuild/RPMS/x86_64/kernel-*
   sudo grub2-mkconfig -o /boot/grub2/grub.cfg
+  echo "done"
   echo "**************************************************"
 
   set +e
@@ -67,7 +76,7 @@ elif [[ "$(cat /etc/redhat-release)" =~ CentOS.* ]]; then
     sudo yum update
     if [[ "$(uname -m)" =~ aarch64.* ]]; then
       echo "**************************************************"
-      echo "WARNING: fluidmem not supported on arm"
+      echo "WARNING: fluidmem not supported on ARM"
       echo "**************************************************"
     else
       #build_kernel_centos

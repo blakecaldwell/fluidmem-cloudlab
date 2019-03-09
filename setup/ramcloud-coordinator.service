@@ -1,0 +1,16 @@
+[Unit]
+Description=RAMCloud coordinator
+After=zookeeper.service
+
+[Service]
+EnvironmentFile=-/etc/default/ramcloud
+ExecStart=/usr/bin/coordinator \
+          $COORDINATOR_LOCATOR1 \
+          $COORDINATOR_LOCATOR2 \
+          $EXTERNAL_STORAGE \
+          $RESET
+#LimitCORE=infinity
+RestartSec=5s
+
+[Install]
+WantedBy=multi-user.target

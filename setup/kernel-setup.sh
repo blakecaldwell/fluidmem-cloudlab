@@ -67,7 +67,7 @@ if [[ "$(cat /etc/lsb-release | grep DISTRIB_ID)" =~ .*Ubuntu.* ]]; then
   set -e
   sudo apt-get update
   sudo apt-get install -y build-essential libncurses5-dev gcc libssl-dev grub2 bc
-  #build_kernel_ubuntu
+  build_kernel_ubuntu
 
   install_kernel_ubuntu
 

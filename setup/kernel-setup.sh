@@ -30,7 +30,9 @@ install_kernel_ubuntu() {
 
   echo "Installing Linux kernel 4.20 with userfaultfd extensions..."
   cd $HOME
-  sudo dpkg -i linux-*+_4.20.0-rc7-scaleos+*.deb linux-libc-dev_4.20.0-rc7-scaleos+-1_amd64.deb
+  sudo dpkg -i linux-*+_4.20.0-rc7-scaleos+*.deb linux-libc-dev_*.deb
+  sudo grub-install --force /dev/sda1
+  sudo update-grub
   echo "done"
   echo "**************************************************"
   set +e

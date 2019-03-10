@@ -66,11 +66,14 @@ cp /tmp/setup/kernel-setup.sh /usr/local/bin/kernel-setup.sh
 cp /tmp/setup/ramcloud-setup.sh /usr/local/bin/ramcloud-setup.sh
 cp /tmp/setup/fluidmem-setup.sh /usr/local/bin/fluidmem-setup.sh
 cp /tmp/setup/docker-setup.sh /usr/local/bin/docker-setup.sh
+cp /tmp/setup/misc-setup.sh /usr/local/bin/misc-setup.sh
+
 chmod +x /usr/local/bin/phase2-setup.sh
 chmod +x /usr/local/bin/kernel-setup.sh
 chmod +x /usr/local/bin/ramcloud-setup.sh
 chmod +x /usr/local/bin/fluidmem-setup.sh
 chmod +x /usr/local/bin/docker-setup.sh
+chmod +x /usr/local/bin/misc-setup.sh
 
 # Any SSDs to use?
 SSD=$(lsblk -o NAME,MODEL|grep SSD | awk 'NR==1{print $1}')
@@ -115,7 +118,7 @@ elif [[ "$(cat /etc/lsb-release | grep DISTRIB_ID)" =~ .*Ubuntu.* ]]; then
   # get last octet of IP address
   SUFFIX=$(ip a| grep "eth\|enp"|grep inet|awk '{print $2}'|cut -d '.' -f4|cut -d '/' -f1)
 
-  cat <<EOF | tee /etc/network/interfaces > /dev/null
+  cat <<EOF | tee /etc/network/interfaces.d/ib0 > /dev/null
 manual ib0
 iface ib0 inet static
     address 10.0.0.${SUFFIX}/24

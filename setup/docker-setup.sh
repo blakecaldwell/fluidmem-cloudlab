@@ -1,14 +1,39 @@
 #!/bin/bash  
 
+echo "*********************************"
+echo "Starting Docker/CRIU install"
+echo "*********************************"
+
 if [[ $EUID -eq 0 ]]; then
   echo "This script should be run as a regular user, not with sudo!"
   exit 1
 fi
 
-install_docker_ubuntu() {
+
+if [ -n "$SSD" ] && [ -e /dev/$SSD ]; then
+  BUILD_DIR=/ssd/build/criu
+  sudo mkdir -p $BUILD_DIR
+  sudo chown $USER:$(id -g) $BUILD_DIR
+  ln -s $BUILD_DIR $HOME/criu
+else
+  BUILD_DIR=$HOME/criu	
+  mkdir $BUILD_DIR
+fi
+
+prepare_ubuntu() {
+
+  set -e
   # get prerequisites for adding the docker repository and verifying with the GPG key
   sudo apt-get update
-  sudo apt-get -y install apt-transport-https ca-certificates curl gnupg-agent software-properties-common
+  sudo apt-get -y install apt-transport-https ca-certificates curl gnupg-agent software-properties-common libprotobuf-dev libprotobuf-c0-dev protobuf-c-compiler protobuf-compiler python-protobuf
+  sudo apt-get install -y  --no-install-recommends pkg-config python-ipaddress libbsd-dev libcap-dev libnl-3-dev libnet-dev libaio-dev python3-future
+
+}
+
+install_ubuntu() {
+  set -e
+
+  # docker
   curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
   sudo apt-key fingerprint 0EBFCD88
   # add the docker repository to apt sources list
@@ -16,20 +41,38 @@ install_docker_ubuntu() {
   sudo apt-get update
   # install docker packages
   sudo apt-get -y install docker-ce docker-ce-cli containerd.io
+
+  # CRIU
+
+  git clone https://github.com/checkpoint-restore/criu.git $BUILD_DIR
+  cd $BUILD_DIR
+  git checkout master
+  make
+  sudo make install
+  set +e
 }
 
 install_docker_centos () {
+  set -e
   sudo yum install -y \
     docker && \
     yum clean all
-
+  set +e
 }
 
 set -e
 if [[ "$(cat /etc/lsb-release | grep DISTRIB_ID)" =~ .*Ubuntu.* ]]; then
-  install_docker_ubuntu
+  prepare_ubuntu
+  install_ubuntu
 elif [[ "$(cat /etc/redhat-release)" =~ CentOS.* ]]; then
   install_docker_centos
+fi
+
+if [ $? -ne 0 ]; then
+  echo "**********************************************************************************"
+  echo "There was an error installing Docker"
+  echo "**********************************************************************************"
+  exit 2
 fi
 
 # let other installs continue
@@ -37,6 +80,6 @@ rm -f /tmp/docker-lock
 
 
 echo "*********************************"
-echo "Finished setting up Docker"
+echo "Finished setting up Docker and CRIU"
 echo "*********************************"
 set +e

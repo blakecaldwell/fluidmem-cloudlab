@@ -1,5 +1,9 @@
 #!/bin/bash  
 
+echo "*********************************"
+echo "Starting RAMCloud install"
+echo "*********************************"
+
 if [[ $EUID -eq 0 ]]; then
   echo "This script should be run as a regular user, not with sudo!"
   exit 1

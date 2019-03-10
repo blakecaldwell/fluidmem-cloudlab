@@ -7,16 +7,16 @@ if [[ $EUID -eq 0 ]]; then
 fi
 
 build_kernel_ubuntu() {
-  set +e
+  set -e
   echo "**************************************************"
 
   echo "Building Linux kernel 4.20 with userfaultfd extensions..." 
   cd $HOME
   KERNEL_VERSION="4.20-rc7"
-  git clone https://github.com/blakecaldwell/userfault-kernel.git kernel-4.20+
+  git clone https://github.com/blakecaldwell/userfault-kernel.git
   wget https://raw.githubusercontent.com/blakecaldwell/fluidmem-cloudlab/master/setup/kernel-config-4.20 &> /dev/null
-  cp kernel-config-4.20 kernel-${KERNEL_VERSION}+/.config
-  cd kernel-${KERNEL_VERSION}+
+  cp kernel-config-4.20 userfault-kernel/.config
+  cd userfault-kernel
   git checkout userfault_${KERNEL_VERSION}
   make olddefconfig
   make -j15 deb-pkg
@@ -25,14 +25,15 @@ build_kernel_ubuntu() {
 }
 
 install_kernel_ubuntu() {
+  set -e
   echo "**************************************************"
 
   echo "Installing Linux kernel 4.20 with userfaultfd extensions..."
   cd $HOME
-  sudo dpkg -i linux-headers-4.20.0+_4.20.0+-1_amd64.deb linux-libc-dev_4.20.0+-1_amd64.deb linux-image-4.20.0+_4.20.0+-1_amd64.deb 
-  echo "done" set +e
+  sudo dpkg -i linux-*+_4.20.0-rc7-scaleos+*.deb linux-libc-dev_4.20.0-rc7-scaleos+-1_amd64.deb
+  echo "done"
   echo "**************************************************"
-
+  set +e
 }
 
 install_kernel_centos() {
@@ -79,12 +80,10 @@ fi
 #  build_kernel
 #fi
 
-
+set -e
 if [[ "$(cat /etc/lsb-release | grep DISTRIB_ID)" =~ .*Ubuntu.* ]]; then
   export DEBIAN_FRONTEND=noninteractive
 
-  # make sure all commamds succeed
-  set -e
   cd $HOME
   sudo apt-get update
   sudo apt-get install -y build-essential libncurses5-dev gcc libssl-dev grub2 bc
@@ -108,11 +107,7 @@ elif [[ "$(cat /etc/redhat-release)" =~ CentOS.* ]]; then
       sudo rm -rf $BUILD_DIR
 
       install_kernel_centos
-    fi
-
-    # make sure all commamds succeed
-    set -e
- 
+    fi 
     REBOOT=yes
   fi
 fi 

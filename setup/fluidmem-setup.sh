@@ -1,5 +1,9 @@
 #!/bin/bash  
 
+echo "*********************************"
+echo "Starting FluidMem install"
+echo "*********************************"
+
 if [[ $EUID -eq 0 ]]; then
   echo "This script should be run as a regular user, not with sudo!"
   exit 1
@@ -29,10 +33,11 @@ fi
 
 
 build_fluidmem () {
+  set -e
   git clone https://github.com/blakecaldwell/fluidmem.git ${BUILD_DIR}
   cd ${BUILD_DIR}
   git checkout ubuntu_dev
-  export CPPFLAGS=-I${BUILD_DIR}../RAMCloud/src/
+  export CPPFLAGS=-I${BUILD_DIR}/../RAMCloud/src/
   ./autogen.sh \
     && ./configure --enable-ramcloud \
       --disable-trace \
@@ -47,10 +52,21 @@ build_fluidmem () {
       --disable-timing \
       --prefix=$(pwd)/build \
     && make -j10 install
+
+  set +e
 } 
 
 build_fluidmem
+if [ $? -ne 0 ]; then
+  echo "**********************************************************************************"
+  echo "There was an error building FluidMem"
+  echo "**********************************************************************************"
+  exit 2
+fi
 
 echo "*********************************"
 echo "Finished setting up FluidMem"
 echo "*********************************"
+
+cd $HOME
+git clone https://bcaldwell@bitbucket.org/jisooy/pmbench.git

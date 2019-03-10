@@ -52,6 +52,7 @@ build_fluidmem () {
       --disable-timing \
       --prefix=$(pwd)/build \
     && make -j10 install
+  sudo mkdir /var/run/fluidmem
 
   set +e
 } 
@@ -67,6 +68,3 @@ fi
 echo "*********************************"
 echo "Finished setting up FluidMem"
 echo "*********************************"
-
-cd $HOME
-git clone https://bcaldwell@bitbucket.org/jisooy/pmbench.git

@@ -26,7 +26,8 @@ prepare_ubuntu() {
   # get prerequisites for adding the docker repository and verifying with the GPG key
   sudo apt-get update
   sudo apt-get -y install apt-transport-https ca-certificates curl gnupg-agent software-properties-common libprotobuf-dev libprotobuf-c0-dev protobuf-c-compiler protobuf-compiler python-protobuf
-  sudo apt-get install -y  --no-install-recommends pkg-config python-ipaddress libbsd-dev libcap-dev libnl-3-dev libnet-dev libaio-dev python3-future
+  # CRIU
+  sudo apt-get install -y  --no-install-recommends pkg-config python-ipaddress libbsd-dev libcap-dev libnl-3-dev libnet-dev libaio-dev python3-future asciidoc xmlto
 
 }
 
@@ -49,6 +50,9 @@ install_ubuntu() {
   git checkout master
   make
   sudo make install
+
+  '{\n    "experimental": true\n}' | sudo tee -a /etc/docker/daemon.json
+
   set +e
 }
 

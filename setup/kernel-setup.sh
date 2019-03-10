@@ -61,38 +61,6 @@ install_kernel_centos() {
 }
 
 
-if [[ "$(cat /etc/lsb-release | grep DISTRIB_ID)" =~ .*Ubuntu.* ]]; then
-  export DEBIAN_FRONTEND=noninteractive
-
-  # make sure all commamds succeed
-  set -e
-  sudo apt-get update
-  sudo apt-get install -y build-essential libncurses5-dev gcc libssl-dev grub2 bc
-  build_kernel_ubuntu
-
-  install_kernel_ubuntu
-
-elif [[ "$(cat /etc/redhat-release)" =~ CentOS.* ]]; then
-  sudo yum groupinstall -y "Development Tools" &&     yum install -y     openssl     openssl-devel     bison     flex     make     gcc     hmaccalc     zlib-devel     binutils-devel     elfutils-libelf-devel     ncurses-devel     rpm-build     bc     git &&     yum clean all
-  if [[ ! "$(uname -r)" =~ 4.20 ]]; then
-    sudo yum update
-    if [[ "$(uname -m)" =~ aarch64.* ]]; then
-      echo "**************************************************"
-      echo "WARNING: fluidmem not supported on ARM"
-      echo "**************************************************"
-    else
-      #build_kernel_centos
-      install_kernel_centos
-    fi
-
-    # make sure all commamds succeed
-    set -e
- 
-    REBOOT=yes
-  fi
-fi 
-
-
 # Build on SSD if set by phase1
 if [ -n "$SSD" ] && [ -e /dev/$SSD ]; then
   BUILD_DIR=/ssd/build/kernel-4.20+
@@ -111,6 +79,45 @@ fi
 #if [ ! -e $BUILD_DIR/.git ]; then
 #  build_kernel
 #fi
+
+
+if [[ "$(cat /etc/lsb-release | grep DISTRIB_ID)" =~ .*Ubuntu.* ]]; then
+  export DEBIAN_FRONTEND=noninteractive
+
+  # make sure all commamds succeed
+  set -e
+  cd $HOME
+  sudo apt-get update
+  sudo apt-get install -y build-essential libncurses5-dev gcc libssl-dev grub2 bc
+  build_kernel_ubuntu
+
+  # clear up some space
+  sudo rm -rf $BUILD_DIR
+  install_kernel_ubuntu
+
+elif [[ "$(cat /etc/redhat-release)" =~ CentOS.* ]]; then
+  sudo yum groupinstall -y "Development Tools" &&     yum install -y     openssl     openssl-devel     bison     flex     make     gcc     hmaccalc     zlib-devel     binutils-devel     elfutils-libelf-devel     ncurses-devel     rpm-build     bc     git &&     yum clean all
+  if [[ ! "$(uname -r)" =~ 4.20 ]]; then
+    sudo yum update
+    if [[ "$(uname -m)" =~ aarch64.* ]]; then
+      echo "**************************************************"
+      echo "WARNING: fluidmem not supported on ARM"
+      echo "**************************************************"
+    else
+      #build_kernel_centos
+      # clear up some space
+      sudo rm -rf $BUILD_DIR
+
+      install_kernel_centos
+    fi
+
+    # make sure all commamds succeed
+    set -e
+ 
+    REBOOT=yes
+  fi
+fi 
+
 
 # let other installs continue
 rm -f /tmp/kernel-lock

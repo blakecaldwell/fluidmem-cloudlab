@@ -63,6 +63,10 @@ build_ramcloud() {
   git submodule update --init --recursive && \
   ln -s obj.b_$COMMIT obj.master  && \
   sudo make install -j4 INFINIBAND=yes DEBUG=no
+
+  sudo cp -r install/lib/* /usr/lib/
+  sudo cp -r install/bin/* /usr/bin/
+  sudo cp -r install/include/* /usr/include/
 }
 
 install_ramcloud_centos() {

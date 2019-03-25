@@ -66,7 +66,7 @@ build_ramcloud() {
   git checkout $COMMIT -b b_$COMMIT && \
   git submodule update --init --recursive && \
   ln -s obj.b_$COMMIT obj.master  && \
-  sudo make install -j4 INFINIBAND=yes DEBUG=no
+  make install -j4 INFINIBAND=yes DEBUG=no
 
   sudo cp -r install/lib/* /usr/lib/
   sudo cp -r install/bin/* /usr/bin/

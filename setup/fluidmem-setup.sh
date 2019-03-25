@@ -36,7 +36,7 @@ build_fluidmem () {
   set -e
   git clone https://github.com/blakecaldwell/fluidmem.git ${BUILD_DIR}
   cd ${BUILD_DIR}
-  git checkout ubuntu_dev
+  git checkout master
   export CPPFLAGS=-I${BUILD_DIR}/../RAMCloud/src/
   ./autogen.sh \
     && ./configure --enable-ramcloud \

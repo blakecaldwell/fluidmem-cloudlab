@@ -65,14 +65,14 @@ install_kernel_centos() {
 
 # Build on SSD if set by phase1
 if [ -n "$SSD" ] && [ -e /dev/$SSD ]; then
-  BUILD_DIR=/ssd/build/kernel-4.20+
+  BUILD_DIR=/ssd/build/userfault-kernel
   if [ ! -e $BUILD_DIR ]; then
     sudo mkdir -p $BUILD_DIR
     sudo chown $USER:$(id -g) $BUILD_DIR
     ln -s $BUILD_DIR $HOME/kernel-4.20+
   fi
 else
-  BUILD_DIR=$HOME/kernel-4.20+
+  BUILD_DIR=$HOME/userfault-kernel
   if [ ! -e $BUILD_DIR ]; then
     mkdir $BUILD_DIR
   fi

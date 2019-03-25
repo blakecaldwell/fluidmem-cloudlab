@@ -51,7 +51,7 @@ install_ubuntu() {
   make
   sudo make install
 
-  echo '{\n    "experimental": true\n}' | sudo tee -a /etc/docker/daemon.json
+  echo -e '{\n    "experimental": true\n}' | sudo tee -a /etc/docker/daemon.json
 
   set +e
 }

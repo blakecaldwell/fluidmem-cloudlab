@@ -18,5 +18,16 @@ March 3, 2019
 
 ## Once cluster has started
  - Login to the node with the ssh key provided to cloudlab
- - A message at login will print out a command to run to start phase 2. This command can be run in parallel across all nodes in the cluster using pdsh
- - The script may instruct you to reboot the machine afterwards. This would need to be done on all systems in the cluster (again using pdsh)
+ - Run phase1 setup:
+
+```bash
+sudo /tmp/setup/phase1-setup.sh
+```
+
+ - Run phase2 command. This can be run in parallel across all nodes in the cluster using pdsh
+
+```bash
+/tmp/setup/phase2-setup.sh all
+```
+
+ - The script may instruct you to reboot the machine afterwards. This needs to be done on all systems in the cluster (again using pdsh)

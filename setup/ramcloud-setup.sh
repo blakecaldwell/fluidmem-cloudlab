@@ -62,7 +62,6 @@ build_ramcloud() {
   cd ${BUILD_DIR}
   wget https://raw.githubusercontent.com/blakecaldwell/fluidmem-cloudlab/master/setup/0002-Remove-references-to-IBV_QPT_RAW_ETH-which-was-remov.patch &> /dev/null
 
-  git am 0002-Remove-references-to-IBV_QPT_RAW_ETH-which-was-remov.patch && \
   git checkout $COMMIT -b b_$COMMIT && \
   git submodule update --init --recursive && \
   ln -s obj.b_$COMMIT obj.master  && \
@@ -90,7 +89,7 @@ install_ramcloud_ubuntu() {
   done
 
   # get our hostname
-  IP=$(route -n|awk '$1 == "192.168.0.0" {print $8}'| xargs ip addr show dev|grep inet|grep -v inet6|sed 's/.*inet \(.*\)\/.*/\1/')
+  IP=$(route -n|awk '$1 == "0.0.0.0" {print $8}'| xargs ip addr show dev|grep inet|grep -v inet6|sed 's/.*inet \(.*\)\/.*/\1/')
   NAME=$(awk "\$1 == \"$IP\" {print \$NF}" /etc/hosts)
   echo "setting up ramcloud config for $NAME"
 

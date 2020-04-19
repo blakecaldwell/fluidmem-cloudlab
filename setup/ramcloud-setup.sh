@@ -89,7 +89,7 @@ install_ramcloud_ubuntu() {
   done
 
   # get our hostname
-  IP=$(route -n|awk '$1 == "0.0.0.0" {print $8}'| xargs ip addr show dev|grep inet|grep -v inet6|sed 's/.*inet \(.*\)\/.*/\1/')
+  IP=$(route -n|awk '$1 == "192.168.0.0" {print $8}'| xargs ip addr show dev|grep inet|grep -v inet6|sed 's/.*inet \(.*\)\/.*/\1/')
   NAME=$(awk "\$1 == \"$IP\" {print \$NF}" /etc/hosts)
   echo "setting up ramcloud config for $NAME"
 
@@ -98,12 +98,22 @@ install_ramcloud_ubuntu() {
       /etc/default/ramcloud
 
   if [[ "$NAME" -eq "cp-1" ]]; then
+    sudo sed -i -e "s/address 10.0.0.*/address 10.0.0.1\/24/" /etc/network/interfaces.d/ib0
+    sudo ifup ib0
+
     echo "running both coordinator and server"
     wget https://raw.githubusercontent.com/blakecaldwell/fluidmem-cloudlab/master/setup/ramcloud-coordinator.service &> /dev/null
     sudo cp /tmp/setup/ramcloud-coordinator.service /lib/systemd/system/ramcloud-coordinator.service
     sudo systemctl enable ramcloud-coordinator
+
+    SERVER_IP=$COORDINATOR_IP
+    sudo sed -i -e "s/%%SERVER_IP%%/${SERVER_IP}/" \
+        /etc/default/ramcloud
   else
     echo "just running server"
+    SERVER_IP=$(ip addr show dev ib0|grep inet|grep -v inet6|sed 's/.*inet \(.*\)\/.*/\1/'|head -1)
+    sudo sed -i -e "s/%%SERVER_IP%%/${SERVER_IP}/" \
+        /etc/default/ramcloud
   fi
 
   wget https://raw.githubusercontent.com/blakecaldwell/fluidmem-cloudlab/master/setup/ramcloud-server.service &> /dev/null

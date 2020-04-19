@@ -1,4 +1,4 @@
-SERVER_LOCATOR="-L infrc:host=%%COORDINATOR_IP%%,port=12241"
+SERVER_LOCATOR="-L infrc:host=%%SERVER_IP%%,port=12241"
 MASTER_MEMORY="--totalMasterMemory 10360"
 REPLICAS="-r %%REPLICAS%%"
 #MASTER_ONLY=--masterOnly

@@ -27,7 +27,7 @@ sudo /tmp/setup/phase1-setup.sh
  - Run phase2 command. This can be run in parallel across all nodes in the cluster using pdsh
 
 ```bash
-/tmp/setup/phase2-setup.sh all
+pdsh -w cp-[1-2] /tmp/setup/phase2-setup.sh all
 ```
 
  - The script may instruct you to reboot the machine afterwards. This needs to be done on all systems in the cluster (again using pdsh)

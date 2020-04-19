@@ -37,7 +37,8 @@ build_fluidmem () {
   git clone https://github.com/blakecaldwell/fluidmem.git ${BUILD_DIR}
   cd ${BUILD_DIR}
   git checkout master
-  export CPPFLAGS=-I${BUILD_DIR}/../RAMCloud/src/
+  export CPPFLAGS="-I${BUILD_DIR}/../RAMCloud/src -I/usr/include/ramcloud"
+  export LDFLAGS="-L/usr/lib/ramcloud"
   ./autogen.sh \
     && ./configure --enable-ramcloud \
       --disable-trace \

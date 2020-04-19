@@ -4,7 +4,7 @@
 # phase2-setup.sh
 #
 # Blake Caldwell <caldweba@colorado.edu>
-# December 11th, 2015
+# April 19th, 2020
 #
 # Purpose: setup script for cloudlab systems
 #  Type fluidmem
@@ -31,8 +31,15 @@ if [[ ! ${SUPPORTED_TYPES} =~ .*$TYPE.* ]]; then
   die "Type $TYPE not supported. Supported types: ${SUPPORTED_TYPES}"
 fi
 
+UBUNTU_RELEASE=$(cat /etc/lsb-release |grep DISTRIB_RELEASE|cut -d'=' -f2)
+if [ -z $UBUNTU_RELEASE ]; then
+  die "Error: could not detect Ubuntu release from /etc/lsb-release"
+fi
+
 if [ $TYPE == "kernel" ]; then
-  /usr/local/bin/kernel-setup.sh
+  if [[ "$UBUNTU_RELEASE" =~ "16.04" ]]; then
+    /usr/local/bin/kernel-setup.sh
+  fi
 elif [ $TYPE == "ramcloud" ]; then
   /usr/local/bin/ramcloud-setup.sh
 elif [ $TYPE == "fluidmem" ]; then
@@ -42,11 +49,12 @@ elif [ $TYPE == "docker" ]; then
 elif [ $TYPE == "misc" ]; then
   /usr/local/bin/misc-setup.sh
 elif [ $TYPE == "all" ]; then
-  touch /tmp/kernel-lock
-  /usr/local/bin/kernel-setup.sh &
-  while [ -e /tmp/kernel-lock ]; do
-    sleep 1 
-  done
+  if [ ! -e /opt/.kernel-installed ]; then
+    if [[ "$UBUNTU_RELEASE" =~ "16.04" ]]; then
+      /usr/local/bin/kernel-setup.sh
+      sudo reboot
+    fi
+  fi
 
   touch /tmp/ramcloud-lock
   /usr/local/bin/ramcloud-setup.sh &

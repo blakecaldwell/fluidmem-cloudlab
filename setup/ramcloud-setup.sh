@@ -60,7 +60,6 @@ build_ramcloud() {
   COMMIT=master
   git clone https://github.com/PlatformLab/RAMCloud ${BUILD_DIR}
   cd ${BUILD_DIR}
-  wget https://raw.githubusercontent.com/blakecaldwell/fluidmem-cloudlab/master/setup/0002-Remove-references-to-IBV_QPT_RAW_ETH-which-was-remov.patch &> /dev/null
 
   git checkout $COMMIT -b b_$COMMIT && \
   git submodule update --init --recursive && \
@@ -93,12 +92,12 @@ install_ramcloud_ubuntu() {
   NAME=$(awk "\$1 == \"$IP\" {print \$NF}" /etc/hosts)
   echo "setting up ramcloud config for $NAME"
 
-  COORDINATOR_IP=10.0.0.1
+  COORDINATOR_IP=10.0.1.1
   sudo sed -i -e "s/%%COORDINATOR_IP%%/${COORDINATOR_IP}/" -e "s/%%REPLICAS%%/$REPLICAS/" \
       /etc/default/ramcloud
 
   if [[ "$NAME" -eq "cp-1" ]]; then
-    sudo sed -i -e "s/address 10.0.0.*/address 10.0.0.1\/24/" /etc/network/interfaces.d/ib0
+    sudo sed -i -e "s/address 10.0.1.*/address 10.0.1.1\/24/" /etc/network/interfaces
     sudo ifup ib0
 
     echo "running both coordinator and server"
@@ -110,6 +109,7 @@ install_ramcloud_ubuntu() {
     sudo sed -i -e "s/%%SERVER_IP%%/${SERVER_IP}/" \
         /etc/default/ramcloud
   else
+    sudo ifup ib0
     echo "just running server"
     SERVER_IP=$(ip addr show dev ib0|grep inet|grep -v inet6|sed 's/.*inet \(.*\)\/.*/\1/'|head -1)
     sudo sed -i -e "s/%%SERVER_IP%%/${SERVER_IP}/" \

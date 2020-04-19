@@ -118,10 +118,10 @@ elif [[ "$(cat /etc/lsb-release | grep DISTRIB_ID)" =~ .*Ubuntu.* ]]; then
   # get last octet of IP address
   SUFFIX=$(ip a| grep "eth\|enp\|eno"|grep inet|awk '{print $2}'|cut -d '.' -f4|cut -d '/' -f1)
 
-  cat <<EOF | tee /etc/network/interfaces.d/ib0 > /dev/null
+  cat <<EOF | tee -a /etc/network/interfaces > /dev/null
 auto ib0
 iface ib0 inet static
-    address 10.0.0.${SUFFIX}/24
+    address 10.0.1.${SUFFIX}/24
     pre-up modprobe mlx4_ib
     pre-up modprobe ib_umad
     pre-up modprobe ib_uverbs

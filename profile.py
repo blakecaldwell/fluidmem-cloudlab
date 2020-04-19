@@ -9,7 +9,8 @@ import random
 
 # Don't want this as a param yet
 TBURL = "https://www.github.com/blakecaldwell/fluidmem-cloudlab/raw/master/setup.tar.gz"
-TBCMD = "sudo mkdir -p /root/setup && sudo -H /tmp/setup/phase1-setup.sh 2>&1 | sudo tee /root/setup/phase1-setup.log.$(date +'%Y%m%d%H%M%S')"
+TBCMD = "sudo mkdir -p /root/setup && sudo -H /tmp/setup/phase1-setup.sh 2>&1 | sudo tee -a /root/setup/phase1-setup.log.$(date +'%Y%m%d%H%M%S') \
+         /tmp/setup/phase2-setup.sh all 2>&1 | sudo tee -a /root/setup/phase2-setup.log"
 
 #
 # Create our in-memory model of the RSpec -- the resources we're going to request
@@ -31,8 +32,8 @@ pc.defineParameter("archType","Architecture Type",
                    portal.ParameterType.STRING,"x86_64",[("arm","ARM"),("x86_64","Intel x86_64")],
                    longDescription="Either ARM64 (X-GENE, aarch64) or Intel x86_64 for the system architecture type.")
 pc.defineParameter("OSType","OS Type",
-                   portal.ParameterType.STRING,"ubuntu",[("centos","CentOS 7.1"),("ubuntu","Ubuntu 16.04")],
-                   longDescription="Choose either CentOS 7.1 or Ubuntu 16.04 for the OS distribution.")
+                   portal.ParameterType.STRING,"ubuntu16",[("centos","CentOS 7.1"),("ubuntu14","Ubuntu 14.04"),("ubuntu16","Ubuntu 16.04")],
+                   longDescription="Choose either CentOS 7.1, Ubuntu 14.04, or Ubuntu 16.04 for the OS distribution.")
 pc.defineParameter("computeHostBaseName", "Base name of compute node(s)",
                    portal.ParameterType.STRING, "cp", advanced=True,
                    longDescription="The base string of the short name of the compute nodes (node names will look like cp-1, cp-2, ... You shold leave this alone unless you really want the hostname to change.")
@@ -78,8 +79,8 @@ firstNode = "%s-%d" % (params.computeHostBaseName,1)
 tourDescription = \
   "A configurable number of nodes for running FluidMem with RDMA libraries and parallel shell (pdsh) installed. The following distributions are valid: " + '\n' + \
   " 1. x86_64 w/ Ubuntu 16.04 (default)" + '\n' + \
-  " 2. x86_64 w/ Centos 7.1" + '\n' + \
-  " 3. ARM64 w/ Ubuntu 14.04 (not ready)" + '\n' + '\n' + \
+  " 2. x86_64 w/ Ubuntu 14.04 (default)" + '\n' + \
+  " 3. x86_64 w/ Centos 7.1" + '\n' + \
   "Note: A message at login will be displayed about next steps for configuration (kernel, ramcloud, fluidmem)" + '\n' 
 
 tourInstructions = \
@@ -153,7 +154,8 @@ mgmtlan.best_effort = True
 #
 
 #x86_ubuntu_disk_image = 'urn:publicid:IDN+utah.cloudlab.us+image+emulab-ops//UBUNTU14-64-STD'
-x86_ubuntu_disk_image = 'urn:publicid:IDN+emulab.net+image+emulab-ops//UBUNTU16-64-STD'
+x86_ubuntu14_disk_image = 'urn:publicid:IDN+emulab.net+image+emulab-ops//UBUNTU14-64-STD'
+x86_ubuntu16_disk_image = 'urn:publicid:IDN+emulab.net+image+emulab-ops//UBUNTU16-64-STD'
 #x86_ubuntu_disk_image = 'urn:publicid:IDN+utah.cloudlab.us+image+cloudlab-PG0:x86-ubuntu15-10:0'
 #x86_centos_disk_image = 'urn:publicid:IDN+emulab.net+image+emulab-ops:CENTOS71-64-STD'
 x86_centos_disk_image = 'urn:publicid:IDN+emulab.net+image+emulab-ops:CENTOS7-64-STD'
@@ -161,12 +163,12 @@ arm_disk_image = 'urn:publicid:IDN+utah.cloudlab.us+image+emulab-ops:UBUNTU14-64
 
 if params.OSType == 'centos':
   chosenDiskImage = x86_centos_disk_image
-elif params.OSType == 'ubuntu':
+elif params.OSType == 'ubuntu16':
   if params.archType == 'x86_64':
-    chosenDiskImage = x86_ubuntu_disk_image
-  elif params.archType == 'arm':
-    chosenDiskImage = arm_disk_image
-
+    chosenDiskImage = x86_ubuntu16_disk_image
+elif params.OSType == 'ubuntu14':
+  if params.archType == 'x86_64':
+    chosenDiskImage = x86_ubuntu14_disk_image
 
 computeNodeNames = []
 computeNodeList = ""

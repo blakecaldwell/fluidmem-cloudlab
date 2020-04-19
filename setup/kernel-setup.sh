@@ -114,6 +114,7 @@ elif [[ "$(cat /etc/redhat-release)" =~ CentOS.* ]]; then
   fi
 fi 
 
+sudo touch /opt/.kernel-installed
 
 # let other installs continue
 rm -f /tmp/kernel-lock

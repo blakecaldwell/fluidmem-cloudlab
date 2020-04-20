@@ -55,20 +55,20 @@ elif [ $TYPE == "infiniswap" ]; then
 elif [ $TYPE == "root" ]; then
   if [ ! -e /opt/.kernel-installed ]; then
     if [[ "$UBUNTU_RELEASE" =~ "16.04" ]]; then
-      /usr/local/bin/kernel-setup.sh && \
+      sudo /usr/local/bin/kernel-setup.sh && \
         sudo reboot
     fi
     touch /tmp/ramcloud-lock
-    /usr/local/bin/ramcloud-setup.sh &
+    sudo /usr/local/bin/ramcloud-setup.sh &
     while [ -e /tmp/ramcloud-lock ]; do
       sleep 1
     done
   elif [[ "$UBUNTU_RELEASE" =~ "14.04" ]]; then
-    /usr/local/bin/infiniswap-setup.sh
+    sudo /usr/local/bin/infiniswap-setup.sh
   fi
 
   touch /tmp/docker-lock
-  /usr/local/bin/docker-setup.sh &
+  sudo /usr/local/bin/docker-setup.sh &
   while [ -e /tmp/docker-lock ]; do
     sleep 1
   done

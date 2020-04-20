@@ -34,7 +34,7 @@ cat <<EOF | tee /etc/profile.d/firstboot.sh > /dev/null
 
 if [ -f $SETUPFLAG ]; then
   echo "*******************************************"
-  echo "RDMA setup in progress. Wait until complete"
+  echo "Base setup in progress. Wait until complete"
   echo "before installing any packages"
   echo "*******************************************"
 
@@ -42,19 +42,19 @@ elif [ -f $FLAG ]; then
   if [ -z "$HOSTS" ]; then
   # single host in cluster
     echo "***********************************************************"
-    echo -e "RDMA setup complete"
+    echo -e "Base setup complete"
     echo -e "Run the following command to start second phase of setup.\n\
-/usr/local/bin/phase2-setup.sh [ kernel | ramcloud | fluidmem | docker | all ]"
+/usr/local/bin/phase2-setup.sh [ kernel | ramcloud | fluidmem | docker | infiniswap | root | all ]"
     echo "***********************************************************"
 
   else
 
     echo "***********************************************************************************"
-    echo -e "RDMA setup complete"
+    echo -e "Base setup complete"
     echo -e "Your cluster has the following hosts:\n\
 $HOSTS\n"
     echo -e "Run the following command to start second phase of setup.\n\
-pdsh -w cp-[1-$i] /usr/local/bin/phase2-setup.sh [ kernel | ramcloud | docker| fluidmem | all ]"
+pdsh -w cp-[1-$i] /usr/local/bin/phase2-setup.sh [ kernel | ramcloud | docker| fluidmem | infiniswap | root | all ]"
     echo "***********************************************************************************"
 
   fi

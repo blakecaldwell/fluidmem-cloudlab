@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 import geni.portal as portal
-import geni.rspec.pg as RSpec
+import geni.rspec.pg as rspec
 import geni.rspec.igext as IG
 from lxml import etree as ET
 import crypt
@@ -16,28 +16,24 @@ TBCMD = "if [ -e /tmp/setup/phase1-setup.sh ]; then sudo mkdir -p /root/setup &&
 # Create our in-memory model of the RSpec -- the resources we're going to request
 # in our experiment, and their configuration.
 #
-rspec = RSpec.Request()
+request = portal.context.makeRequestRSpec()
 
-#
-# This geni-lib script is designed to run in the CloudLab Portal.
-#
-pc = portal.Context()
 
 #
 # Define *many* parameters; see the help docs in geni-lib to learn how to modify.
 #
-pc.defineParameter("computeNodeCount", "Number of compute nodes",
+portal.context.defineParameter("computeNodeCount", "Number of compute nodes",
                    portal.ParameterType.INTEGER, 1)
-pc.defineParameter("archType","Architecture Type",
+portal.context.defineParameter("archType","Architecture Type",
                    portal.ParameterType.STRING,"x86_64",[("arm","ARM"),("x86_64","Intel x86_64")],
                    longDescription="Either ARM64 (X-GENE, aarch64) or Intel x86_64 for the system architecture type.")
-pc.defineParameter("OSType","OS Type",
+portal.context.defineParameter("OSType","OS Type",
                    portal.ParameterType.STRING,"ubuntu16",[("centos","CentOS 7.1"),("ubuntu14","Ubuntu 14.04"),("ubuntu16","Ubuntu 16.04")],
                    longDescription="Choose either CentOS 7.1, Ubuntu 14.04, or Ubuntu 16.04 for the OS distribution.")
-pc.defineParameter("computeHostBaseName", "Base name of compute node(s)",
+portal.context.defineParameter("computeHostBaseName", "Base name of compute node(s)",
                    portal.ParameterType.STRING, "cp", advanced=True,
                    longDescription="The base string of the short name of the compute nodes (node names will look like cp-1, cp-2, ... You shold leave this alone unless you really want the hostname to change.")
-pc.defineParameter("ipAllocationStrategy","IP Addressing",
+portal.context.defineParameter("ipAllocationStrategy","IP Addressing",
                    portal.ParameterType.STRING,"script",[("cloudlab","CloudLab"),("script","This Script")],
                    longDescription="Either let CloudLab auto-generate IP addresses for the nodes, or let this script generate them.  If the script IP address generation is buggy or otherwise insufficient, you can fall back to CloudLab and see if that improves things.",
                    advanced=True)
@@ -45,7 +41,7 @@ pc.defineParameter("ipAllocationStrategy","IP Addressing",
 #
 # Get any input parameter values that will override our defaults.
 #
-params = pc.bindParameters()
+params = portal.context.bindParameters()
 
 #
 # Verify our parameters and throw errors.
@@ -53,12 +49,12 @@ params = pc.bindParameters()
 
 if params.computeNodeCount > 8:
     perr = portal.ParameterWarning("Do you really need more than 8 compute nodes?  Think of your fellow users scrambling to get nodes :).",['computeNodeCount'])
-    pc.reportWarning(perr)
+    portal.context.reportWarning(perr)
     pass
 
 if params.OSType == 'centos' and params.archType == 'arm':
     perr = portal.ParameterError("ARM architecture type is not compatible with CentOS disk image. Please choose Ubuntu with ARM architecture type.",['OSType','archType'])
-    pc.reportError(perr)
+    portal.context.reportError(perr)
     pass
 
 if params.ipAllocationStrategy == 'script':
@@ -72,14 +68,14 @@ else:
 # Give the library a chance to return nice JSON-formatted exception(s) and/or
 # warnings; this might sys.exit().
 #
-pc.verifyParameters()
+portal.context.verifyParameters()
 
 
 firstNode = "%s-%d" % (params.computeHostBaseName,1)
 tourDescription = \
   "A configurable number of nodes for running FluidMem with RDMA libraries and parallel shell (pdsh) installed. The following distributions are valid: " + '\n' + \
-  " 1. x86_64 w/ Ubuntu 16.04 (default)" + '\n' + \
-  " 2. x86_64 w/ Ubuntu 14.04" + '\n' + \
+  " 1. x86_64 w/ Ubuntu 16.04 (FluidMem)" + '\n' + \
+  " 2. x86_64 w/ Ubuntu 14.04 (Infiniswap)" + '\n' + \
   " 3. x86_64 w/ Centos 7.1" + '\n' + \
   "Note: A message at login will be displayed about next steps for configuration (kernel, ramcloud, fluidmem)" + '\n' 
 
@@ -92,7 +88,7 @@ tourInstructions = \
 tour = IG.Tour()
 tour.Description(IG.Tour.TEXT,tourDescription)
 tour.Instructions(IG.Tour.MARKDOWN,tourInstructions)
-rspec.addTour(tour)
+request.addTour(tour)
 
 #
 # Ok, get down to business -- we are going to create CloudLab LANs to be used as
@@ -103,8 +99,6 @@ rspec.addTour(tour)
 
 ipdb = {}
 ipdb['mgmt-lan'] = { 'base':'192.168','netmask':'255.255.0.0','values':[-1,-10,0,0] }
-
-mgmtlan = RSpec.LAN('mgmt-lan')
 
 # Assume a /16 for every network
 # blakec: this is hacked. don't instantiate more than 255 nodes!
@@ -142,7 +136,7 @@ def get_netmask(lan):
 # a dedicated experiment interface, not the Cloudlab public control network.
 #
  
-mgmtlan = RSpec.LAN('mgmt-lan')
+mgmtlan = request.LAN('mgmt-lan')
 # blakec: always Multiplex any flat networks (i.e., management and all of the flat 
 #         data networks) over physical interfaces, using VLANs.
 mgmtlan.link_multiplexing = True
@@ -178,31 +172,29 @@ for i in range(1,params.computeNodeCount + 1):
     pass
 
 for cpname in computeNodeNames:
-    cpnode = RSpec.RawPC(cpname)
+    cpnode = rspec.RawPC(cpname)
     cpnode.disk_image = chosenDiskImage
     if params.computeNodeCount > 1:
         iface = cpnode.addInterface("if0")
         mgmtlan.addInterface(iface)
         if generateIPs:
-            iface.addAddress(RSpec.IPv4Address(get_next_ipaddr(mgmtlan.client_id),
+            iface.addAddress(rspec.IPv4Address(get_next_ipaddr(mgmtlan.client_id),
                                            get_netmask(mgmtlan.client_id)))
             pass
         pass
-    cpnode.addService(RSpec.Install(url=TBURL, path="/tmp"))
-    cpnode.addService(RSpec.Execute(shell="sh",command=TBCMD))
-    rspec.addResource(cpnode)
+    cpnode.addService(rspec.Install(url=TBURL, path="/tmp"))
+    cpnode.addService(rspec.Execute(shell="sh",command=TBCMD))
+    request.addResource(cpnode)
     computeNodeList += cpname + ' '
     pass
 
-
-rspec.addResource(mgmtlan)
 
 #
 # Add our parameters to the request so we can get their values to our nodes.
 # The nodes download the manifest(s), and the setup scripts read the parameter
 # values when they run.
 #
-class Parameters(RSpec.Resource):
+class Parameters(rspec.Resource):
     def _write(self, root):
         ns = "{http://www.protogeni.net/resources/rspec/ext/johnsond/1}"
         paramXML = "%sparameter" % (ns,)
@@ -217,6 +209,7 @@ class Parameters(RSpec.Resource):
     pass
 
 parameters = Parameters()
-rspec.addResource(parameters)
+request.addResource(parameters)
 
-pc.printRequestRSpec(rspec)
+portal.context.printRequestRSpec()
+

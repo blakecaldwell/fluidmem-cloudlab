@@ -66,6 +66,7 @@ cp /tmp/setup/phase2-setup.sh /usr/local/bin/phase2-setup.sh
 cp /tmp/setup/kernel-setup.sh /usr/local/bin/kernel-setup.sh
 cp /tmp/setup/ramcloud-setup.sh /usr/local/bin/ramcloud-setup.sh
 cp /tmp/setup/fluidmem-setup.sh /usr/local/bin/fluidmem-setup.sh
+cp /tmp/setup/infiniswap-setup.sh /usr/local/bin/infiniswap-setup.sh
 cp /tmp/setup/docker-setup.sh /usr/local/bin/docker-setup.sh
 cp /tmp/setup/misc-setup.sh /usr/local/bin/misc-setup.sh
 

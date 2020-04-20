@@ -17,7 +17,7 @@
 
 die() { echo "$@" 1>&2 ; exit 1; }
 
-SUPPORTED_TYPES="kernel docker fluidmem ramcloud misc all"
+SUPPORTED_TYPES="kernel docker fluidmem ramcloud misc infiniswap all"
 
 [[ $1 ]] || die "No setup type specified. Supported types: ${SUPPORTED_TYPES}"
 

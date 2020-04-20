@@ -46,7 +46,16 @@ install_zookeeper_centos() {
 prepare_ramcloud_ubuntu() {
   set -e
   sudo apt-get update
-  sudo apt-get -y install build-essential git-core libcppunit-dev libcppunit-doc doxygen  protobuf-compiler libprotobuf-dev libcrypto++-dev libpcrecpp0v5 libpcre++-dev libssl-dev libpcre3-dev zookeeper zookeeper-bin zookeeperd libzookeeper-mt2 libzookeeper-mt-dev libboost-all-dev openjdk-8-jdk
+  UBUNTU_RELEASE=$(cat /etc/lsb-release |grep DISTRIB_RELEASE|cut -d'=' -f2)
+  if [ -z $UBUNTU_RELEASE ]; then
+    die "Error: could not detect Ubuntu release from /etc/lsb-release"
+  fi
+  if [[ "$UBUNTU_RELEASE" =~ "16.04" ]]; then
+    sudo apt-get install -y libpcrecpp0v5 openjdk-8-jdk
+  fi
+
+  sudo apt-get install -y build-essential git-core libcppunit-dev libcppunit-doc doxygen  protobuf-compiler libprotobuf-dev libcrypto++-dev libpcre++-dev libssl-dev libpcre3-dev zookeeper zookeeper-bin zookeeperd libzookeeper-mt2 libzookeeper-mt-dev libboost-all-dev
+
   sudo service zookeeper start
 
   set +e

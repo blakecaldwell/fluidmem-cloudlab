@@ -4,11 +4,7 @@ echo "*********************************"
 echo "Starting Docker/CRIU install"
 echo "*********************************"
 
-if [[ $EUID -eq 0 ]]; then
-  echo "This script should be run as a regular user, not with sudo!"
-  exit 1
-fi
-
+[[ $HOME ]] || HOME=/root
 
 if [ -n "$SSD" ] && [ -e /dev/$SSD ]; then
   BUILD_DIR=/ssd/build/criu

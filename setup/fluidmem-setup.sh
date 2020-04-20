@@ -40,7 +40,7 @@ build_fluidmem () {
   export CPPFLAGS="-I${BUILD_DIR}/../RAMCloud/src -I/usr/include/ramcloud"
   export LDFLAGS="-L/usr/lib/ramcloud"
   ./autogen.sh \
-    && ./configure --enable-noop \
+    && ./configure --enable-ramcloud \
       --disable-trace \
       --disable-debug \
       --disable-lock_debug \

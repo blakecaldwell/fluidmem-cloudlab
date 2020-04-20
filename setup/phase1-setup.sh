@@ -15,6 +15,7 @@ set -x
 
 FLAG="/opt/.usersetup"
 SETUPFLAG="/opt/.setup_in_process"
+mkdir /opt
 # FLAG will not exist on the *very* fist boot because
 # it is created here!
 if [ ! -f $SETUPFLAG ]; then
@@ -125,7 +126,6 @@ iface ib0 inet static
     pre-up modprobe mlx4_ib
     pre-up modprobe ib_umad
     pre-up modprobe ib_uverbs
-    pre-up modprobe ib_mthca
     pre-up modprobe ib_ipoib
 EOF
 fi

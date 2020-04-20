@@ -17,10 +17,6 @@
 
 die() { echo "$@" 1>&2 ; exit 1; }
 
-if [[ $EUID -eq 0 ]]; then
-  die "This script should be run as a regular user, not with sudo!"
-fi
-
 SUPPORTED_TYPES="kernel docker fluidmem ramcloud misc all"
 
 [[ $1 ]] || die "No setup type specified. Supported types: ${SUPPORTED_TYPES}"
@@ -48,12 +44,42 @@ elif [ $TYPE == "docker" ]; then
   /usr/local/bin/docker-setup.sh
 elif [ $TYPE == "misc" ]; then
   /usr/local/bin/misc-setup.sh
+elif [ $TYPE == "infiniswap" ]; then
+  if [[ "$UBUNTU_RELEASE" =~ "14.04" ]]; then
+    /usr/local/bin/infiniswap-setup.sh
+  fi
+elif [ $TYPE == "root" ]; then
+  if [ ! -e /opt/.kernel-installed ]; then
+    if [[ "$UBUNTU_RELEASE" =~ "16.04" ]]; then
+      /usr/local/bin/kernel-setup.sh && \
+        sudo reboot
+    fi
+    touch /tmp/ramcloud-lock
+    /usr/local/bin/ramcloud-setup.sh &
+    while [ -e /tmp/ramcloud-lock ]; do
+      sleep 1
+    done
+  elif [[ "$UBUNTU_RELEASE" =~ "14.04" ]]; then
+    /usr/local/bin/infiniswap-setup.sh
+  fi
+
+  touch /tmp/docker-lock
+  /usr/local/bin/docker-setup.sh &
+  while [ -e /tmp/docker-lock ]; do
+    sleep 1
+  done
+
+
 elif [ $TYPE == "all" ]; then
   if [ ! -e /opt/.kernel-installed ]; then
     if [[ "$UBUNTU_RELEASE" =~ "16.04" ]]; then
-      /usr/local/bin/kernel-setup.sh
-      sudo reboot
+      /usr/local/bin/kernel-setup.sh && \
+        sudo reboot
     fi
+  fi
+  
+  if [[ "$UBUNTU_RELEASE" =~ "14.04" ]]; then
+    /usr/local/bin/infiniswap-setup.sh
   fi
 
   touch /tmp/ramcloud-lock

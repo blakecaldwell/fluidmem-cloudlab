@@ -10,7 +10,7 @@ import random
 # Don't want this as a param yet
 TBURL = "https://www.github.com/blakecaldwell/fluidmem-cloudlab/raw/master/setup.tar.gz"
 TBCMD = "if [ -e /tmp/setup/phase1-setup.sh ]; then sudo mkdir -p /root/setup && sudo -H /tmp/setup/phase1-setup.sh 2>&1 | sudo tee -a /root/setup/phase1-setup.log.$(date +'%Y%m%d%H%M%S') && \
-         /tmp/setup/phase2-setup.sh all 2>&1 | sudo tee -a /root/setup/phase2-setup.log; fi"
+         /tmp/setup/phase2-setup.sh root 2>&1 | sudo tee -a /root/setup/phase2-setup.log; fi"
 
 #
 # Create our in-memory model of the RSpec -- the resources we're going to request

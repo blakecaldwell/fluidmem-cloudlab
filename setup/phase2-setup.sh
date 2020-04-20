@@ -17,7 +17,7 @@
 
 die() { echo "$@" 1>&2 ; exit 1; }
 
-SUPPORTED_TYPES="kernel docker fluidmem ramcloud misc infiniswap all"
+SUPPORTED_TYPES="kernel docker fluidmem ramcloud misc infiniswap all root"
 
 [[ $1 ]] || die "No setup type specified. Supported types: ${SUPPORTED_TYPES}"
 
@@ -39,11 +39,15 @@ if [ $TYPE == "kernel" ]; then
 elif [ $TYPE == "ramcloud" ]; then
   /usr/local/bin/ramcloud-setup.sh
 elif [ $TYPE == "fluidmem" ]; then
-  /usr/local/bin/fluidmem-setup.sh
+  if [[ $EUID -ne 0 ]]; then
+    /usr/local/bin/fluidmem-setup.sh
+  fi
 elif [ $TYPE == "docker" ]; then
   /usr/local/bin/docker-setup.sh
 elif [ $TYPE == "misc" ]; then
-  /usr/local/bin/misc-setup.sh
+  if [[ $EUID -ne 0 ]]; then
+    /usr/local/bin/misc-setup.sh
+  fi
 elif [ $TYPE == "infiniswap" ]; then
   if [[ "$UBUNTU_RELEASE" =~ "14.04" ]]; then
     /usr/local/bin/infiniswap-setup.sh
@@ -94,15 +98,18 @@ elif [ $TYPE == "all" ]; then
     sleep 1
   done
 
-  touch /tmp/misc-lock
-  /usr/local/bin/misc-setup.sh &
-  while [ -e /tmp/misc-lock ]; do
-    sleep 1
-  done
+  if [[ $EUID -ne 0 ]]; then
+    touch /tmp/misc-lock
+    /usr/local/bin/misc-setup.sh &
+    while [ -e /tmp/misc-lock ]; do
+      sleep 1
+    done
+  fi
 
-  /usr/local/bin/fluidmem-setup.sh &
-
-  wait
+  if [[ $EUID -ne 0 ]]; then
+    /usr/local/bin/fluidmem-setup.sh &
+    wait
+  fi
 fi
 
 if [ $? -ne 0 ]; then

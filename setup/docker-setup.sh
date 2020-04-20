@@ -23,7 +23,14 @@ prepare_ubuntu() {
   sudo apt-get update
   sudo apt-get -y install apt-transport-https ca-certificates curl gnupg-agent software-properties-common libprotobuf-dev libprotobuf-c0-dev protobuf-c-compiler protobuf-compiler python-protobuf
   # CRIU
-  sudo apt-get install -y  --no-install-recommends pkg-config python-ipaddress libbsd-dev libcap-dev libnl-3-dev libnet-dev libaio-dev python3-future asciidoc xmlto
+  UBUNTU_RELEASE=$(cat /etc/lsb-release |grep DISTRIB_RELEASE|cut -d'=' -f2)
+  if [ -z $UBUNTU_RELEASE ]; then
+    die "Error: could not detect Ubuntu release from /etc/lsb-release"
+  fi
+  if [[ "$UBUNTU_RELEASE" =~ "16.04" ]]; then
+    sudo apt-get install -y  --no-install-recommends python3-future python-ipaddress
+  fi
+  sudo apt-get install -y  --no-install-recommends pkg-config libbsd-dev libcap-dev libnl-3-dev libnet-dev libaio-dev asciidoc xmlto
 
 }
 

@@ -28,11 +28,13 @@ prepare_infiniswap_ubuntu() {
   set -e
   sudo apt-get update
   sudo apt-get -y remove libibnetdisc5
+  sudo apt-get remove -y kernel-mft-dkms
 
-  wget "https://www.dropbox.com/s/op43xec3nx2cxzf/MLNX_OFED_LINUX-3.4-1.0.0.0-ubuntu14.04-x86_64.tgz?dl=1" -o MLNX_OFED_LINUX-3.4-1.0.0.0-ubuntu14.04-x86_64.tgz &> /dev/null
+  curl -Lo MLNX_OFED_LINUX-3.4-1.0.0.0-ubuntu14.04-x86_64.tgz https://www.dropbox.com/s/op43xec3nx2cxzf/MLNX_OFED_LINUX-3.4-1.0.0.0-ubuntu14.04-x86_64.tgz?dl=1 &> /dev/null
   tar -xf MLNX_OFED_LINUX-3.4-1.0.0.0-ubuntu14.04-x86_64.tgz
   cd MLNX_OFED_LINUX-3.4-1.0.0.0-ubuntu14.04-x86_64/
   sudo ./mlnxofedinstall --add-kernel-support
+  sudo rmmod mlx5_fpga_tools
   sudo /etc/init.d/openibd restart
   set +e
 }
@@ -58,7 +60,7 @@ build_infiniswap() {
     ./install.sh bd
 
     HOSTS=$(cat /etc/hosts|grep cp-|grep -v cp-1|awk '{print $4}'|sort)
-    let i=0
+    let i=0 || true
     for each in $HOSTS; do
       (( i += 1 ))
     done
@@ -68,7 +70,7 @@ build_infiniswap() {
 #$(for each in $HOSTS; do echo "$(grep $each /etc/hosts|awk '{print $1}'):9400"; done)
 #EOF
     sudo apt-get install -y cgroup-bin cgroup-lite libcgroup1
-   fi
+  fi
 
   set +e
 }
@@ -101,7 +103,6 @@ if [[ "$(cat /etc/lsb-release | grep DISTRIB_ID)" =~ .*Ubuntu.* ]]; then
   prepare_infiniswap_ubuntu
   build_infiniswap
   start_infiniswap
-elif [[ "$(cat /etc/redhat-release)" =~ CentOS.* ]]; then
 fi
 
 

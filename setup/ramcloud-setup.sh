@@ -56,7 +56,7 @@ prepare_ramcloud_ubuntu() {
 
   sudo apt-get install -y build-essential git-core libcppunit-dev libcppunit-doc doxygen  protobuf-compiler libprotobuf-dev libcrypto++-dev libpcre++-dev libssl-dev libpcre3-dev zookeeper zookeeper-bin zookeeperd libzookeeper-mt2 libzookeeper-mt-dev libboost-all-dev
 
-  sudo service zookeeper start
+  sudo service zookeeper start || true
 
   set +e
 }

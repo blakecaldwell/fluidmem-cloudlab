@@ -108,6 +108,7 @@ install_ramcloud_ubuntu() {
   if [[ "$NAME" -eq "cp-1" ]]; then
     sudo sed -i -e "s/address 10.0.1.*/address 10.0.1.1\/24/" /etc/network/interfaces
     sudo ifup ib0
+    sudo ifconfig ib0 10.0.1.1
 
     echo "running both coordinator and server"
     wget https://raw.githubusercontent.com/blakecaldwell/fluidmem-cloudlab/master/setup/ramcloud-coordinator.service &> /dev/null

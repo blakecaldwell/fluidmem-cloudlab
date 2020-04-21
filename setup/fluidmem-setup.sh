@@ -55,16 +55,19 @@ build_fluidmem () {
   sudo chown $USER: /var/run/fluidmem/
   echo "export PATH=\$PATH:$(pwd)/build/bin" >> "$HOME/.bashrc"
   export PATH=$PATH:$(pwd)/build/bin
+
+  sudo cp $(pwd)/build/include/ /usr/local/lib
+  sudo cp $(pwd)/build/include/* /usr/local/include
   set +e
 } 
 
 function start_fluidmem {
   CACHE_SIZE=$((1024 * 1024 * 1024 / 4096))
-  ZOOKEEPER="10.0.0.1:2181"
+  ZOOKEEPER="10.0.1.1:2181"
   LOCATOR="zk:$ZOOKEEPER"
   echo "**********************************************************************************"
   echo "To start FluidMem, run the following comand:"
-  echo "monitor $LOCATOR --cache_size=${CACHE_SIZE} >> ${BUILD_DIR}/monitor.log 2>&1"
+  echo "monitor $LOCATOR --zookeeper=$ZOOKEEPER --cache_size=${CACHE_SIZE} >> ${BUILD_DIR}/monitor.log 2>&1"
   echo "**********************************************************************************"
 }
 

@@ -69,7 +69,6 @@ build_infiniswap() {
 #$i
 #$(for each in $HOSTS; do echo "$(grep $each /etc/hosts|awk '{print $1}'):9400"; done)
 #EOF
-    sudo apt-get install -y cgroup-bin cgroup-lite libcgroup1
   fi
 
   set +e
@@ -88,11 +87,6 @@ start_infiniswap() {
       sudo swapoff $DEV
     fi
     #sudo ./infiniswap_bd_setup.sh
-
-    sudo cgcreate -g memory:/myGroup
-    sudo cgset -r memory.limit_in_bytes=1m myGroup
-    echo "*:pmbench memory myGroup" | sudo tee /etc/cgrules.conf
-    sudo cgrulesengd
   fi
   set +e
 }

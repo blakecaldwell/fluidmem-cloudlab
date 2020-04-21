@@ -40,6 +40,7 @@ prepare_infiniswap_ubuntu() {
   fi
   if [[ "$UBUNTU_RELEASE" =~ "16.04" ]]; then
     sudo apt-get -y remove libosmcomp3 libibumad3 rdmacm-utils libmthca1 libibmad5 libipathverbs1
+    sudo apt-get remove -y ibverbs-utils libibverbs-dev libibverbs1 librdmacm-dev libmlx4-dev libmlx4-1 librdmacm1
     MLNX_OFED="MLNX_OFED_LINUX-3.4-1.0.0.0-ubuntu16.04-x86_64"
     wget https://www.dropbox.com/s/fwxovj9jnyyrl9t/${MLNX_OFED}.tgz?dl=0 -O ${MLNX_OFED}.tgz
   elif [[ "$UBUNTU_RELEASE" =~ "14.04" ]]; then

@@ -32,17 +32,18 @@ fi
 prepare_infiniswap_ubuntu() {
   set -e
   sudo apt-get update
-  sudo apt-get -y remove libibnetdisc5
-  sudo apt-get remove -y kernel-mft-dkms || true
+  sudo apt-get remove -y kernel-mft-dkms
 
   UBUNTU_RELEASE=$(cat /etc/lsb-release |grep DISTRIB_RELEASE|cut -d'=' -f2)
   if [ -z $UBUNTU_RELEASE ]; then
     die "Error: could not detect Ubuntu release from /etc/lsb-release"
   fi
   if [[ "$UBUNTU_RELEASE" =~ "16.04" ]]; then
-    MLNX_OFED="MLNX_OFED_LINUX-4.0-2.0.0.1-ubuntu16.04-x86_64"
-    wget https://www.dropbox.com/s/4zbe0z7t898c9i5/${MLNX_OFED}.tgz?dl=1 -O ${MLNX_OFED}.tgz
+    sudo apt-get -y remove libosmcomp3 libibumad3 rdmacm-utils libmthca1 libibmad5 libipathverbs1
+    MLNX_OFED="MLNX_OFED_LINUX-3.4-1.0.0.0-ubuntu16.04-x86_64"
+    wget https://www.dropbox.com/s/fwxovj9jnyyrl9t/${MLNX_OFED}.tgz?dl=0 -O ${MLNX_OFED}.tgz
   elif [[ "$UBUNTU_RELEASE" =~ "14.04" ]]; then
+    sudo apt-get -y remove libibnetdisc5
     MLNX_OFED="MLNX_OFED_LINUX-3.4-1.0.0.0-ubuntu14.04-x86_64"
     wget https://www.dropbox.com/s/op43xec3nx2cxzf/${MLNX_OFED}.tgz?dl=1 -O ${MLNX_OFED}.tgz
   fi

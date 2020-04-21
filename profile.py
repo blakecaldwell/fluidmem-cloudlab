@@ -32,7 +32,7 @@ portal.context.defineParameter("computeNodeCount", "Number of compute nodes",
 portal.context.defineParameter("upgradeKernel", "Upgrade kernel to FluidMem?",
                    portal.ParameterType.BOOLEAN, True)
 portal.context.defineParameter("hardwareType","Hardware Type",
-                   portal.ParameterType.STRING,"c6220",[("c6220","c6220 APT"),("c6320","c6320 Clemson"),("d6515","d6515 Utah"),("m510","m510 Utah")],
+                   portal.ParameterType.STRING,"c6220",[("c6220","c6220 APT"),("c6320","c6320 Clemson"),("d6515","d6515 Utah")],
                    longDescription="Hardware type to request. All have Infiniband.")
 portal.context.defineParameter("archType","Architecture Type",
                    portal.ParameterType.STRING,"x86_64",[("arm","ARM"),("x86_64","Intel x86_64")],

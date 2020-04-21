@@ -78,7 +78,7 @@ build_ramcloud() {
   git checkout $COMMIT -b b_$COMMIT && \
   git submodule update --init --recursive && \
   ln -s obj.b_$COMMIT obj.master  && \
-  make install -j4 INFINIBAND=yes DEBUG=no
+  make install -j8 INFINIBAND=yes DEBUG=no
 
   sudo cp -r install/lib/* /usr/lib/
   sudo cp -r install/bin/* /usr/bin/
@@ -91,12 +91,13 @@ install_ramcloud_centos() {
 }
 
 install_ramcloud_ubuntu() {
+  cd /tmp/
   wget https://raw.githubusercontent.com/blakecaldwell/fluidmem-cloudlab/master/setup/ramcloud-default &> /dev/null
-  sudo cp /tmp/setup/ramcloud-default /etc/default/ramcloud
+  sudo cp /tmp/ramcloud-default /etc/default/ramcloud
 
   # get number of replicas
   HOSTS=$(cat /etc/hosts|grep cp-|awk '{print $4}'|sort)
-  let REPLICAS=0
+  let REPLICAS=-2
   for each in $HOSTS; do
     (( REPLICAS += 1 ))
   done
@@ -110,15 +111,23 @@ install_ramcloud_ubuntu() {
   sudo sed -i -e "s/%%COORDINATOR_IP%%/${COORDINATOR_IP}/" -e "s/%%REPLICAS%%/$REPLICAS/" \
       /etc/default/ramcloud
 
+  if [[ $REPLICAS -eq 0 ]]; then
+
+  fi
+
+  wget https://raw.githubusercontent.com/blakecaldwell/fluidmem-cloudlab/master/setup/ramcloud-server.service &> /dev/null
+  sudo cp /setup/ramcloud-server.service /lib/systemd/system/ramcloud-server.service
+  wget https://raw.githubusercontent.com/blakecaldwell/fluidmem-cloudlab/master/setup/ramcloud-coordinator.service &> /dev/null
+  sudo cp /tmp/ramcloud-coordinator.service /lib/systemd/system/ramcloud-coordinator.service
+
   if [[ "$NAME" -eq "cp-1" ]]; then
     sudo sed -i -e "s/address 10.0.1.*/address 10.0.1.1\/24/" /etc/network/interfaces
     sudo ifup ib0
     sudo ifconfig ib0 10.0.1.1
 
     echo "running both coordinator and server"
-    wget https://raw.githubusercontent.com/blakecaldwell/fluidmem-cloudlab/master/setup/ramcloud-coordinator.service &> /dev/null
-    sudo cp /tmp/setup/ramcloud-coordinator.service /lib/systemd/system/ramcloud-coordinator.service
     sudo systemctl enable ramcloud-coordinator
+    sudo systemctl enable ramcloud-server
 
     SERVER_IP=$COORDINATOR_IP
     sudo sed -i -e "s/%%SERVER_IP%%/${SERVER_IP}/" \
@@ -131,15 +140,11 @@ install_ramcloud_ubuntu() {
         /etc/default/ramcloud
   fi
 
-  wget https://raw.githubusercontent.com/blakecaldwell/fluidmem-cloudlab/master/setup/ramcloud-server.service &> /dev/null
-  sudo cp /tmp/setup/ramcloud-server.service /lib/systemd/system/ramcloud-server.service
-  sudo systemctl enable ramcloud-server
 
   cat <<EOF | sudo tee /etc/ld.so.conf.d/ramcloud-x86_64.conf > /dev/null
 /usr/lib/ramcloud
 EOF
   sudo ldconfig
-
 }
 
 prepare_ramcloud_centos () {

@@ -35,9 +35,21 @@ prepare_infiniswap_ubuntu() {
   sudo apt-get -y remove libibnetdisc5
   sudo apt-get remove -y kernel-mft-dkms || true
 
-  wget https://www.dropbox.com/s/op43xec3nx2cxzf/MLNX_OFED_LINUX-3.4-1.0.0.0-ubuntu14.04-x86_64.tgz?dl=1 -O MLNX_OFED_LINUX-3.4-1.0.0.0-ubuntu14.04-x86_64.tgz
-  tar -xf MLNX_OFED_LINUX-3.4-1.0.0.0-ubuntu14.04-x86_64.tgz
-  cd MLNX_OFED_LINUX-3.4-1.0.0.0-ubuntu14.04-x86_64/
+  UBUNTU_RELEASE=$(cat /etc/lsb-release |grep DISTRIB_RELEASE|cut -d'=' -f2)
+  if [ -z $UBUNTU_RELEASE ]; then
+    die "Error: could not detect Ubuntu release from /etc/lsb-release"
+  fi
+  if [[ "$UBUNTU_RELEASE" =~ "16.04" ]]; then
+    MLNX_OFED="MLNX_OFED_LINUX-4.0-2.0.0.1-ubuntu16.04-x86_64"
+    wget https://www.dropbox.com/s/4zbe0z7t898c9i5/${MLNX_OFED}.tgz?dl=1 -O ${MLNX_OFED}.tgz
+  elif [[ "$UBUNTU_RELEASE" =~ "14.04" ]]; then
+    MLNX_OFED="MLNX_OFED_LINUX-3.4-1.0.0.0-ubuntu14.04-x86_64"
+    wget https://www.dropbox.com/s/op43xec3nx2cxzf/${MLNX_OFED}.tgz?dl=1 -O ${MLNX_OFED}.tgz
+  fi
+
+  tar -xf ${MLNX_OFED}.tgz
+  cd ${MLNX_OFED}/
+
   sudo ./mlnxofedinstall --add-kernel-support --with-nvmf
   sudo rmmod mlx5_fpga_tools
   sudo /etc/init.d/openibd restart

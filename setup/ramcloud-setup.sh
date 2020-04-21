@@ -93,7 +93,7 @@ install_ramcloud_centos() {
 install_ramcloud_ubuntu() {
   cd /tmp/
   wget https://raw.githubusercontent.com/blakecaldwell/fluidmem-cloudlab/master/setup/ramcloud-default &> /dev/null
-  sudo cp /tmp/ramcloud-default /etc/default/ramcloud
+  sudo mv /tmp/ramcloud-default /etc/default/ramcloud
 
   # get number of replicas
   HOSTS=$(cat /etc/hosts|grep cp-|awk '{print $4}'|sort)
@@ -112,13 +112,14 @@ install_ramcloud_ubuntu() {
       /etc/default/ramcloud
 
   if [[ $REPLICAS -eq 0 ]]; then
-
+    sudo sed -i -e "s/#MASTER_ONLY.*/MASTER_ONLY=--masterOnly/" \
+        /etc/default/ramcloud
   fi
 
   wget https://raw.githubusercontent.com/blakecaldwell/fluidmem-cloudlab/master/setup/ramcloud-server.service &> /dev/null
-  sudo cp /setup/ramcloud-server.service /lib/systemd/system/ramcloud-server.service
+  sudo mv /tmp/ramcloud-server.service /lib/systemd/system/ramcloud-server.service
   wget https://raw.githubusercontent.com/blakecaldwell/fluidmem-cloudlab/master/setup/ramcloud-coordinator.service &> /dev/null
-  sudo cp /tmp/ramcloud-coordinator.service /lib/systemd/system/ramcloud-coordinator.service
+  sudo mv /tmp/ramcloud-coordinator.service /lib/systemd/system/ramcloud-coordinator.service
 
   if [[ "$NAME" -eq "cp-1" ]]; then
     sudo sed -i -e "s/address 10.0.1.*/address 10.0.1.1\/24/" /etc/network/interfaces

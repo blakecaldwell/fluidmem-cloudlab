@@ -56,11 +56,12 @@ build_fluidmem () {
     && make -j10 install
   sudo mkdir /var/run/fluidmem
   sudo chown $USER: /var/run/fluidmem/
+  sudo ldconfig  # update from library in /usr/local/lib
   set +e
 } 
 
 function start_fluidmem {
-  CACHE_SIZE=\$((1024 * 1024 * 1024 / 4096))
+  CACHE_SIZE=$((1024 * 1024 * 1024 / 4096))
   ZOOKEEPER="10.0.1.1:2181"
   LOCATOR="zk:$ZOOKEEPER"
   echo "**********************************************************************************"

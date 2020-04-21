@@ -10,10 +10,12 @@ import random
 # Don't want this as a param yet
 TBURL = "https://www.github.com/blakecaldwell/fluidmem-cloudlab/raw/master/setup.tar.gz"
 KERNEL_TBCMD = "if [ -e /tmp/setup/phase1-setup.sh ]; then sudo mkdir -p /root/setup && sudo -H /tmp/setup/phase1-setup.sh 2>&1 | sudo tee -a /root/setup/phase1-setup.log.$(date +'%Y%m%d%H%M%S') && \
-         /usr/local/bin/phase2-setup.sh kernel 2>&1 | sudo tee -a /root/setup/phase2-setup.log; \
-         else sudo /usr/local/bin/phase2-setup.sh ramcloud ; sudo /usr/local/bin/phase2-setup.sh fluidmem; sudo /usr/local/bin/phase2-setup.sh misc; fi"
+            /usr/local/bin/phase2-setup.sh kernel 2>&1 | sudo tee -a /root/setup/phase2-setup.log; \
+         else sudo /usr/local/bin/phase2-setup.sh ramcloud ; \
+           sudo /usr/local/bin/phase2-setup.sh fluidmem | sudo tee -a /root/setup/phase2-setup.log; \
+           sudo /usr/local/bin/phase2-setup.sh misc; fi"
 TBCMD = "if [ -e /tmp/setup/phase1-setup.sh ]; then sudo mkdir -p /root/setup && sudo -H /tmp/setup/phase1-setup.sh 2>&1 | sudo tee -a /root/setup/phase1-setup.log.$(date +'%Y%m%d%H%M%S') && \
-         sudo /usr/local/bin/phase2-setup.sh infiniswap; sudo /usr/local/bin/phase2-setup.sh misc; fi"
+         sudo /usr/local/bin/phase2-setup.sh infiniswap | sudo tee -a /root/setup/phase2-setup.log ; sudo /usr/local/bin/phase2-setup.sh misc | sudo tee -a /root/setup/phase2-setup.log; fi"
 
 #
 # Create our in-memory model of the RSpec -- the resources we're going to request
@@ -29,6 +31,9 @@ portal.context.defineParameter("computeNodeCount", "Number of compute nodes",
                    portal.ParameterType.INTEGER, 1)
 portal.context.defineParameter("upgradeKernel", "Upgrade kernel to FluidMem?",
                    portal.ParameterType.BOOLEAN, True)
+portal.context.defineParameter("hardwareType","Hardware Type",
+                   portal.ParameterType.STRING,"c6220",[("c6220","c6220 APT"),("c6320","c6320 Clemson"),("d6515","d6515 Utah"),("m510","m510 Utah")],
+                   longDescription="Hardware type to request. All have Infiniband.")
 portal.context.defineParameter("archType","Architecture Type",
                    portal.ParameterType.STRING,"x86_64",[("arm","ARM"),("x86_64","Intel x86_64")],
                    longDescription="Either ARM64 (X-GENE, aarch64) or Intel x86_64 for the system architecture type.")
@@ -177,6 +182,7 @@ for i in range(1,params.computeNodeCount + 1):
 
 for cpname in computeNodeNames:
     cpnode = rspec.RawPC(cpname)
+    cpnode.hardware_type = params.hardwareType
     cpnode.disk_image = chosenDiskImage
     if params.computeNodeCount > 1:
         iface = cpnode.addInterface("if0")

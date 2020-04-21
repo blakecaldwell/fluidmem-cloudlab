@@ -1,12 +1,16 @@
 #!/bin/bash  
 
+if [ -e /opt/.fluidmem-installed ]; then
+  echo "Already installed fluidmem"
+  exit 0
+fi
+
 echo "*********************************"
 echo "Starting FluidMem install"
 echo "*********************************"
 
 if [[ $EUID -eq 0 ]]; then
-  echo "This script should be run as a regular user, not with sudo!"
-  exit 1
+  HOME=/root
 fi
 
 if [[ "$(uname -m)" =~ aarch64.* ]]; then
@@ -25,9 +29,9 @@ if [ -n "$SSD" ] && [ -e /dev/$SSD ]; then
   BUILD_DIR=/ssd/build/fluidmem
   sudo mkdir -p $BUILD_DIR
   sudo chown $USER:$(id -g) $BUILD_DIR
-  ln -s $BUILD_DIR $HOME/fluidmem
+  ln -s $BUILD_DIR /opt/fluidmem
 else
-  BUILD_DIR=$HOME/fluidmem	
+  BUILD_DIR=/opt/fluidmem	
   mkdir $BUILD_DIR
 fi
 
@@ -49,20 +53,14 @@ build_fluidmem () {
       --enable-affinity \
       --enable-asynread \
       --disable-timing \
-      --prefix=$(pwd)/build \
     && make -j10 install
   sudo mkdir /var/run/fluidmem
   sudo chown $USER: /var/run/fluidmem/
-  echo "export PATH=\$PATH:$(pwd)/build/bin" >> "$HOME/.bashrc"
-  export PATH=$PATH:$(pwd)/build/bin
-
-  sudo cp $(pwd)/build/include/ /usr/local/lib
-  sudo cp $(pwd)/build/include/* /usr/local/include
   set +e
 } 
 
 function start_fluidmem {
-  CACHE_SIZE=$((1024 * 1024 * 1024 / 4096))
+  CACHE_SIZE=\$((1024 * 1024 * 1024 / 4096))
   ZOOKEEPER="10.0.1.1:2181"
   LOCATOR="zk:$ZOOKEEPER"
   echo "**********************************************************************************"
@@ -78,6 +76,8 @@ if [ $? -ne 0 ]; then
   echo "**********************************************************************************"
   exit 2
 fi
+
+sudo touch /opt/.fluidmem-installed
 
 start_fluidmem
 if [ $? -ne 0 ]; then

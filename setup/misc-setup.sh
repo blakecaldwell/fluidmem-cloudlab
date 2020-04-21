@@ -1,12 +1,16 @@
 #!/bin/bash  
 
+if [ -e /opt/.misc-installed ]; then
+  echo "Already installed misc"
+  exit 0
+fi
+
 echo "*********************************"
 echo "Starting misc install"
 echo "*********************************"
 
 if [[ $EUID -eq 0 ]]; then
-  echo "This script should be run as a regular user, not with sudo!"
-  exit 1
+  HOME=/root
 fi
 
 if [[ "$(cat /etc/redhat-release)" =~ CentOS.* ]]; then
@@ -90,10 +94,16 @@ EOF
   sudo cgrulesengd
 fi
 
-cd $HOME
-git clone --branch userfault https://github.com/blakecaldwell/pmbench.git
+cd /opt
+if [[ ! -e /opt/.kernel-installed ]]; then
+  git clone https://bcaldwell@bitbucket.org/jisooy/pmbench.git
+else
+  git clone --branch userfault https://github.com/blakecaldwell/pmbench.git
+fi
 cd pmbench
 make pmbench
+
+sudo touch /opt/.misc-installed
 
 # let other installs continue
 rm -f /tmp/misc-lock

@@ -1,18 +1,23 @@
 #!/bin/bash  
 
+if [ -e /opt/.ramcloud-installed ]; then
+  echo "Already installed ramcloud"
+  exit 0
+fi
+
 echo "*********************************"
 echo "Starting RAMCloud install"
 echo "*********************************"
 
 if [[ $EUID -eq 0 ]]; then
-  echo "This script should be run as a regular user, not with sudo!"
-  exit 1
+  HOME=/root
 fi
 
 if [[ "$(uname -m)" =~ aarch64.* ]]; then
   echo "**************************************************"
-  echo "WARNING: RAMCloud will not compile on ARM. Proceeding anyway"
+  echo "WARNING: RAMCloud will not compile on ARM."
   echo "**************************************************"
+  exit 1
 fi
 
 if [[ "$(cat /etc/redhat-release)" =~ CentOS.* ]]; then
@@ -25,9 +30,9 @@ if [ -n "$SSD" ] && [ -e /dev/$SSD ]; then
   BUILD_DIR=/ssd/build/RAMCloud
   sudo mkdir -p $BUILD_DIR
   sudo chown $USER:$(id -g) $BUILD_DIR
-  ln -s $BUILD_DIR $HOME/RAMCloud
+  ln -s $BUILD_DIR /opt/RAMCloud
 else
-  BUILD_DIR=$HOME/RAMCloud	
+  BUILD_DIR=/opt/RAMCloud	
   mkdir $BUILD_DIR
 fi
 
@@ -174,7 +179,7 @@ elif [[ "$(cat /etc/redhat-release)" =~ CentOS.* ]]; then
   install_ramcloud_centos
 fi
 
-
+sudo touch /opt/.ramcloud-installed
 
 # let other installs continue
 rm -f /tmp/ramcloud-lock

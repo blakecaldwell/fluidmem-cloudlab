@@ -9,8 +9,11 @@ import random
 
 # Don't want this as a param yet
 TBURL = "https://www.github.com/blakecaldwell/fluidmem-cloudlab/raw/master/setup.tar.gz"
-TBCMD = "if [ -e /tmp/setup/phase1-setup.sh ]; then sudo mkdir -p /root/setup && sudo -H /tmp/setup/phase1-setup.sh 2>&1 | sudo tee -a /root/setup/phase1-setup.log.$(date +'%Y%m%d%H%M%S') && \
-         /tmp/setup/phase2-setup.sh root 2>&1 | sudo tee -a /root/setup/phase2-setup.log; fi"
+KERNEL_TBCMD = "if [ -e /tmp/setup/phase1-setup.sh ]; then sudo mkdir -p /root/setup && sudo -H /tmp/setup/phase1-setup.sh 2>&1 | sudo tee -a /root/setup/phase1-setup.log.$(date +'%Y%m%d%H%M%S') && \
+         /usr/local/bin/phase2-setup.sh kernel 2>&1 | sudo tee -a /root/setup/phase2-setup.log; \
+         else sudo /usr/local/bin/phase2-setup.sh ramcloud ; sudo /usr/local/bin/phase2-setup.sh fluidmem; sudo /usr/local/bin/phase2-setup.sh misc; fi"
+TBCMD = "if [ -e /tmp/setup/phase1-setup.sh ]; then sudo mkdir -p /root/setup && sudo -H /tmp/setup/phase1-setup.sh 2>&1 | sudo tee -a /root/setup/phase1-setup.log.$(date +'%Y%m%d%H%M%S') ; \
+         else sudo /usr/local/bin/phase2-setup.sh infiniswap; sudo /usr/local/bin/phase2-setup.sh misc; fi"
 
 #
 # Create our in-memory model of the RSpec -- the resources we're going to request
@@ -24,6 +27,8 @@ request = portal.context.makeRequestRSpec()
 #
 portal.context.defineParameter("computeNodeCount", "Number of compute nodes",
                    portal.ParameterType.INTEGER, 1)
+portal.context.defineParameter("upgradeKernel", "Upgrade kernel to FluidMem?",
+                   portal.ParameterType.BOOLEAN, True)
 portal.context.defineParameter("archType","Architecture Type",
                    portal.ParameterType.STRING,"x86_64",[("arm","ARM"),("x86_64","Intel x86_64")],
                    longDescription="Either ARM64 (X-GENE, aarch64) or Intel x86_64 for the system architecture type.")
@@ -46,7 +51,6 @@ params = portal.context.bindParameters()
 #
 # Verify our parameters and throw errors.
 #
-
 if params.computeNodeCount > 8:
     perr = portal.ParameterWarning("Do you really need more than 8 compute nodes?  Think of your fellow users scrambling to get nodes :).",['computeNodeCount'])
     portal.context.reportWarning(perr)
@@ -183,7 +187,10 @@ for cpname in computeNodeNames:
             pass
         pass
     cpnode.addService(rspec.Install(url=TBURL, path="/tmp"))
-    cpnode.addService(rspec.Execute(shell="sh",command=TBCMD))
+    if params.upgradeKernel: 
+      cpnode.addService(rspec.Execute(shell="sh",command=KERNEL_TBCMD))
+    else:
+      cpnode.addService(rspec.Execute(shell="sh",command=TBCMD))
     request.addResource(cpnode)
     computeNodeList += cpname + ' '
     pass

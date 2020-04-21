@@ -33,56 +33,26 @@ if [ -z $UBUNTU_RELEASE ]; then
 fi
 
 if [ $TYPE == "kernel" ]; then
-  if [[ "$UBUNTU_RELEASE" =~ "16.04" ]]; then
-    /usr/local/bin/kernel-setup.sh
-  fi
-elif [ $TYPE == "ramcloud" ]; then
-  /usr/local/bin/ramcloud-setup.sh
-elif [ $TYPE == "fluidmem" ]; then
-  if [[ $EUID -ne 0 ]]; then
-    /usr/local/bin/fluidmem-setup.sh
-  fi
-elif [ $TYPE == "docker" ]; then
-  /usr/local/bin/docker-setup.sh
-elif [ $TYPE == "misc" ]; then
-  if [[ $EUID -ne 0 ]]; then
-    /usr/local/bin/misc-setup.sh
-  fi
-elif [ $TYPE == "infiniswap" ]; then
-  if [[ "$UBUNTU_RELEASE" =~ "14.04" ]]; then
-    /usr/local/bin/infiniswap-setup.sh
-  fi
-elif [ $TYPE == "root" ]; then
   if [ ! -e /opt/.kernel-installed ]; then
     if [[ "$UBUNTU_RELEASE" =~ "16.04" ]]; then
       sudo /usr/local/bin/kernel-setup.sh && \
         sudo reboot
     fi
-    touch /tmp/ramcloud-lock
-    sudo /usr/local/bin/ramcloud-setup.sh &
-    while [ -e /tmp/ramcloud-lock ]; do
-      sleep 1
-    done
-  elif [[ "$UBUNTU_RELEASE" =~ "14.04" ]]; then
-    sudo /usr/local/bin/infiniswap-setup.sh
   fi
-
-  touch /tmp/docker-lock
-  sudo /usr/local/bin/docker-setup.sh &
-  while [ -e /tmp/docker-lock ]; do
-    sleep 1
-  done
-
-
+elif [ $TYPE == "ramcloud" ]; then
+  /usr/local/bin/ramcloud-setup.sh
+elif [ $TYPE == "fluidmem" ]; then
+  /usr/local/bin/fluidmem-setup.sh
+elif [ $TYPE == "docker" ]; then
+  /usr/local/bin/docker-setup.sh
+elif [ $TYPE == "misc" ]; then
+  /usr/local/bin/misc-setup.sh
+elif [ $TYPE == "infiniswap" ]; then
+  if [ ! -e /opt/.kernel-installed ]; then
+    /usr/local/bin/infiniswap-setup.sh
+  fi
 elif [ $TYPE == "all" ]; then
   if [ ! -e /opt/.kernel-installed ]; then
-    if [[ "$UBUNTU_RELEASE" =~ "16.04" ]]; then
-      /usr/local/bin/kernel-setup.sh && \
-        sudo reboot
-    fi
-  fi
-  
-  if [[ "$UBUNTU_RELEASE" =~ "14.04" ]]; then
     /usr/local/bin/infiniswap-setup.sh
   fi
 
@@ -98,18 +68,13 @@ elif [ $TYPE == "all" ]; then
     sleep 1
   done
 
-  if [[ $EUID -ne 0 ]]; then
-    touch /tmp/misc-lock
-    /usr/local/bin/misc-setup.sh &
-    while [ -e /tmp/misc-lock ]; do
-      sleep 1
-    done
-  fi
+  touch /tmp/misc-lock
+  /usr/local/bin/misc-setup.sh &
+  while [ -e /tmp/misc-lock ]; do
+    sleep 1
+  done
 
-  if [[ $EUID -ne 0 ]]; then
-    /usr/local/bin/fluidmem-setup.sh &
-    wait
-  fi
+  /usr/local/bin/fluidmem-setup.sh
 fi
 
 if [ $? -ne 0 ]; then

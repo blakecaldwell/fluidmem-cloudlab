@@ -1,5 +1,10 @@
 #!/bin/bash  
 
+if [ -e /opt/.kernel-installed ]; then
+  echo "Already installed kernel"
+  exit 0
+fi
+
 [[ $HOME ]] || HOME=/root
 
 build_kernel_ubuntu() {

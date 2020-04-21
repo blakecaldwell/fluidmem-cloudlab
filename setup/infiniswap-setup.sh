@@ -1,5 +1,10 @@
 #!/bin/bash  
 
+if [ -e /opt/.infiniswap-installed ]; then
+  echo "Already installed infiniswap"
+  exit 0
+fi
+
 echo "*********************************"
 echo "Starting Infiniswap install"
 echo "*********************************"
@@ -28,12 +33,12 @@ prepare_infiniswap_ubuntu() {
   set -e
   sudo apt-get update
   sudo apt-get -y remove libibnetdisc5
-  sudo apt-get remove -y kernel-mft-dkms
+  sudo apt-get remove -y kernel-mft-dkms || true
 
-  curl -Lo MLNX_OFED_LINUX-3.4-1.0.0.0-ubuntu14.04-x86_64.tgz https://www.dropbox.com/s/op43xec3nx2cxzf/MLNX_OFED_LINUX-3.4-1.0.0.0-ubuntu14.04-x86_64.tgz?dl=1 &> /dev/null
+  wget https://www.dropbox.com/s/op43xec3nx2cxzf/MLNX_OFED_LINUX-3.4-1.0.0.0-ubuntu14.04-x86_64.tgz?dl=1 -O MLNX_OFED_LINUX-3.4-1.0.0.0-ubuntu14.04-x86_64.tgz
   tar -xf MLNX_OFED_LINUX-3.4-1.0.0.0-ubuntu14.04-x86_64.tgz
   cd MLNX_OFED_LINUX-3.4-1.0.0.0-ubuntu14.04-x86_64/
-  sudo ./mlnxofedinstall --add-kernel-support
+  sudo ./mlnxofedinstall --add-kernel-support --with-nvmf
   sudo rmmod mlx5_fpga_tools
   sudo /etc/init.d/openibd restart
   set +e
@@ -100,6 +105,7 @@ if [[ "$(cat /etc/lsb-release | grep DISTRIB_ID)" =~ .*Ubuntu.* ]]; then
 fi
 
 
+sudo touch /opt/.infiniswap-installed
 
 # let other installs continue
 rm -f /tmp/infiniswap-lock

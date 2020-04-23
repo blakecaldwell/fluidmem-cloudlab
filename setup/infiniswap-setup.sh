@@ -1,5 +1,7 @@
 #!/bin/bash  
 
+die() { echo "$@" 1>&2 ; exit 1; }
+
 if [ -e /opt/.infiniswap-installed ]; then
   echo "Already installed infiniswap"
   exit 0

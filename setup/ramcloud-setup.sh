@@ -1,5 +1,7 @@
 #!/bin/bash  
 
+die() { echo "$@" 1>&2 ; exit 1; }
+
 if [ -e /opt/.ramcloud-installed ]; then
   echo "Already installed ramcloud"
   exit 0
@@ -12,6 +14,12 @@ echo "*********************************"
 if [[ $EUID -eq 0 ]]; then
   HOME=/root
 fi
+
+[[ $HOME ]] || {
+  HOME=/opt
+  sudo chmod o+rwx /opt
+  sudo chown $USER /opt
+}
 
 if [[ "$(uname -m)" =~ aarch64.* ]]; then
   echo "**************************************************"
@@ -30,9 +38,9 @@ if [ -n "$SSD" ] && [ -e /dev/$SSD ]; then
   BUILD_DIR=/ssd/build/RAMCloud
   sudo mkdir -p $BUILD_DIR
   sudo chown $USER:$(id -g) $BUILD_DIR
-  ln -s $BUILD_DIR /opt/RAMCloud
+  ln -s $BUILD_DIR $HOME/RAMCloud
 else
-  BUILD_DIR=/opt/RAMCloud	
+  BUILD_DIR=$HOME/RAMCloud
   mkdir $BUILD_DIR
 fi
 

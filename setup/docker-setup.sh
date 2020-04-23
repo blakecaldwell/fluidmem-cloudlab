@@ -1,5 +1,7 @@
 #!/bin/bash  
 
+die() { echo "$@" 1>&2 ; exit 1; }
+
 echo "*********************************"
 echo "Starting Docker/CRIU install"
 echo "*********************************"

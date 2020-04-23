@@ -1,5 +1,7 @@
 #!/bin/bash  
 
+die() { echo "$@" 1>&2 ; exit 1; }
+
 if [ -e /opt/.misc-installed ]; then
   echo "Already installed misc"
   exit 0
@@ -19,6 +21,7 @@ fi
   sudo chown $USER /opt
 }
 
+set -e
 if [[ "$(cat /etc/redhat-release)" =~ CentOS.* ]]; then
   sudo yum  -y install libxml-devel
 elif [[ "$(cat /etc/lsb-release | grep DISTRIB_ID)" =~ .*Ubuntu.* ]]; then
@@ -108,6 +111,7 @@ else
 fi
 cd pmbench
 make pmbench
+set +e
 
 sudo touch /opt/.misc-installed
 

@@ -5,7 +5,15 @@ if [ -e /opt/.kernel-installed ]; then
   exit 0
 fi
 
-[[ $HOME ]] || HOME=/root
+if [[ $EUID -eq 0 ]]; then
+  HOME=/root
+fi
+
+[[ $HOME ]] || {
+  HOME=/opt
+  sudo chmod o+rwx /opt
+  sudo chown $USER /opt
+}
 
 build_kernel_ubuntu() {
   set -e

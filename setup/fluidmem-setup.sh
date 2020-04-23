@@ -1,5 +1,7 @@
 #!/bin/bash  
 
+die() { echo "$@" 1>&2 ; exit 1; }
+
 if [ -e /opt/.fluidmem-installed ]; then
   echo "Already installed fluidmem"
   exit 0
@@ -35,7 +37,7 @@ if [ -n "$SSD" ] && [ -e /dev/$SSD ]; then
   BUILD_DIR=/ssd/build/fluidmem
   sudo mkdir -p $BUILD_DIR
   sudo chown $USER:$(id -g) $BUILD_DIR
-  ln -s $BUILD_DIR /opt/fluidmem
+  ln -s $BUILD_DIR $HOME/fluidmem
 else
   BUILD_DIR=$HOME/fluidmem	
   mkdir $BUILD_DIR
@@ -47,10 +49,17 @@ build_fluidmem () {
   git clone https://github.com/blakecaldwell/fluidmem.git ${BUILD_DIR}
   cd ${BUILD_DIR}
   git checkout master
-  export CPPFLAGS="-I${BUILD_DIR}/../RAMCloud/src -I/usr/include/ramcloud"
+  if [ -d $HOME/RAMCloud ]; then
+    RAMCLOUD_BASE=$HOME/RAMCloud
+  elif [ -d /opt/RAMCloud ]; then
+    RAMCLOUD_BASE=/opt/RAMCloud
+  else
+    die "Could not find RAMCloud source sirectory in $HOME or /opt"
+  fi
+  export CPPFLAGS="-I${RAMCLOUD_BASE}/src -I/usr/include/ramcloud"
   export LDFLAGS="-L/usr/lib/ramcloud"
-  ./autogen.sh \
-    && ./configure --enable-ramcloud \
+  ./autogen.sh
+  ./configure --enable-ramcloud \
       --disable-trace \
       --disable-debug \
       --disable-lock_debug \
@@ -59,20 +68,27 @@ build_fluidmem () {
       --enable-affinity \
       --enable-asynread \
       --disable-timing \
-    && make -j10 install
-  sudo mkdir /var/run/fluidmem
+      --prefix=$(pwd)/build
+  make -j10 install
+  sudo mkdir /var/run/fluidmem || true
   sudo chown $USER: /var/run/fluidmem/
+  # just install libuserfault_client to system paths
+  sudo cp build/include/userfault-client.h /usr/local/include/
+  sudo cp -d build/lib/libuserfault_client.* /usr/local/lib/
   sudo ldconfig  # update from library in /usr/local/lib
+  export PATH=$PATH:$(pwd)/build/bin
+  echo "export PATH=\$PATH:$(pwd)/build/bin" >> ~/.bashrc
   set +e
 } 
 
 function start_fluidmem {
   CACHE_SIZE=$((1024 * 1024 * 1024 / 4096))
-  ZOOKEEPER="10.0.1.1:2181"
+  ip=$(ip a show dev ib0|grep inet|grep -v inet6|awk '{print $2}'|sed 's/\(.*\)\/.*/\1/')
+  ZOOKEEPER="$ip:2181"
   LOCATOR="zk:$ZOOKEEPER"
   echo "**********************************************************************************"
   echo "To start FluidMem, run the following comand:"
-  echo "monitor $LOCATOR --zookeeper=$ZOOKEEPER --cache_size=${CACHE_SIZE} >> ${BUILD_DIR}/monitor.log 2>&1"
+  echo "$(pwd)/build/bin/monitor $LOCATOR --zookeeper=$ZOOKEEPER --cache_size=${CACHE_SIZE} >> ${BUILD_DIR}/monitor.log 2>&1"
   echo "**********************************************************************************"
 }
 

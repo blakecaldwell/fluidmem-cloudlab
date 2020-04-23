@@ -11,7 +11,15 @@ echo "*********************************"
 
 NAME=$(hostname|cut -d'.' -f1)
 
-[[ $HOME ]] || HOME=/root
+if [[ $EUID -eq 0 ]]; then
+  HOME=/root
+fi
+
+[[ $HOME ]] || {
+  HOME=/opt
+  sudo chmod o+rwx /opt
+  sudo chown $USER /opt
+}
 
 if [[ "$(cat /etc/redhat-release)" =~ CentOS.* ]]; then
   NOBODY_USR_GRP="nobody:nobody"
@@ -32,7 +40,7 @@ fi
 prepare_infiniswap_ubuntu() {
   set -e
   sudo apt-get update
-  sudo apt-get remove -y kernel-mft-dkms
+  sudo apt-get remove -y kernel-mft-dkms || true
 
   UBUNTU_RELEASE=$(cat /etc/lsb-release |grep DISTRIB_RELEASE|cut -d'=' -f2)
   if [ -z $UBUNTU_RELEASE ]; then
@@ -52,7 +60,7 @@ prepare_infiniswap_ubuntu() {
   tar -xf ${MLNX_OFED}.tgz
   cd ${MLNX_OFED}/
 
-  sudo ./mlnxofedinstall --add-kernel-support --with-nvmf
+  sudo ./mlnxofedinstall --add-kernel-support --without-dkms
   sudo rmmod mlx5_fpga_tools
   sudo /etc/init.d/openibd restart
   set +e
@@ -67,7 +75,7 @@ build_infiniswap() {
   git clone https://github.com/SymbioticLab/Infiniswap.git ${BUILD_DIR}
   cd ${BUILD_DIR}
 
-  sed -i 's/#max_remote_memory=/max_remote_memory=8/' setup/install.sh
+  sed -i 's/backup_disk=.*/backup_disk="/dev/sdd"/' setup/install.sh
 
   cd setup
   export ip=$(ip a show dev ib0|grep inet|grep -v inet6|awk '{print $2}'|sed 's/\(.*\)\/.*/\1/')

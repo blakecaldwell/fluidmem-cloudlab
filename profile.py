@@ -12,10 +12,11 @@ TBURL = "https://www.github.com/blakecaldwell/fluidmem-cloudlab/raw/master/setup
 KERNEL_TBCMD = "if [ -e /tmp/setup/phase1-setup.sh ]; then sudo mkdir -p /root/setup && sudo -H /tmp/setup/phase1-setup.sh 2>&1 | sudo tee -a /root/setup/phase1-setup.log.$(date +'%Y%m%d%H%M%S') && \
             /usr/local/bin/phase2-setup.sh kernel 2>&1 | sudo tee -a /root/setup/phase2-setup.log; \
          else sudo /usr/local/bin/phase2-setup.sh ramcloud ; \
-           sudo /usr/local/bin/phase2-setup.sh fluidmem | sudo tee -a /root/setup/phase2-setup.log; \
-           sudo /usr/local/bin/phase2-setup.sh misc; fi"
+           /usr/local/bin/phase2-setup.sh fluidmem | sudo tee -a /root/setup/phase2-setup.log; \
+           /usr/local/bin/phase2-setup.sh misc; fi"
 TBCMD = "if [ -e /tmp/setup/phase1-setup.sh ]; then sudo mkdir -p /root/setup && sudo -H /tmp/setup/phase1-setup.sh 2>&1 | sudo tee -a /root/setup/phase1-setup.log.$(date +'%Y%m%d%H%M%S') && \
-         sudo /usr/local/bin/phase2-setup.sh infiniswap | sudo tee -a /root/setup/phase2-setup.log ; sudo /usr/local/bin/phase2-setup.sh misc | sudo tee -a /root/setup/phase2-setup.log; fi"
+         /usr/local/bin/phase2-setup.sh infiniswap | sudo tee -a /root/setup/phase2-setup.log ; \
+         /usr/local/bin/phase2-setup.sh misc | sudo tee -a /root/setup/phase2-setup.log; fi"
 
 #
 # Create our in-memory model of the RSpec -- the resources we're going to request

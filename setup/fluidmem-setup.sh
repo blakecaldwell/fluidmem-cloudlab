@@ -13,6 +13,12 @@ if [[ $EUID -eq 0 ]]; then
   HOME=/root
 fi
 
+[[ $HOME ]] || {
+  HOME=/opt
+  sudo chmod o+rwx /opt
+  sudo chown $USER /opt
+}
+
 if [[ "$(uname -m)" =~ aarch64.* ]]; then
   echo "**************************************************"
   echo "WARNING: FluidMem will not compile on ARM. Proceeding anyway"
@@ -31,7 +37,7 @@ if [ -n "$SSD" ] && [ -e /dev/$SSD ]; then
   sudo chown $USER:$(id -g) $BUILD_DIR
   ln -s $BUILD_DIR /opt/fluidmem
 else
-  BUILD_DIR=/opt/fluidmem	
+  BUILD_DIR=$HOME/fluidmem	
   mkdir $BUILD_DIR
 fi
 

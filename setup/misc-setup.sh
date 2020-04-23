@@ -13,6 +13,12 @@ if [[ $EUID -eq 0 ]]; then
   HOME=/root
 fi
 
+[[ $HOME ]] || {
+  HOME=/opt
+  sudo chmod o+rwx /opt
+  sudo chown $USER /opt
+}
+
 if [[ "$(cat /etc/redhat-release)" =~ CentOS.* ]]; then
   sudo yum  -y install libxml-devel
 elif [[ "$(cat /etc/lsb-release | grep DISTRIB_ID)" =~ .*Ubuntu.* ]]; then
@@ -28,7 +34,7 @@ elif [[ "$(cat /etc/lsb-release | grep DISTRIB_ID)" =~ .*Ubuntu.* ]]; then
 
   sudo apt-get install -y cgroup-bin cgroup-lite libcgroup1
   sudo cgcreate -g memory:/myGroup
-  sudo cgset -r memory.limit_in_bytes=1m myGroup
+  sudo cgset -r memory.limit_in_bytes=10m myGroup
   echo "*:pmbench memory myGroup" | sudo tee /etc/cgrules.conf
 
   cat <<EOF | sudo tee /etc/cgconfig.conf > /dev/null
@@ -94,7 +100,7 @@ EOF
   sudo cgrulesengd
 fi
 
-cd /opt
+cd $HOME
 if [[ ! -e /opt/.kernel-installed ]]; then
   git clone https://bcaldwell@bitbucket.org/jisooy/pmbench.git
 else

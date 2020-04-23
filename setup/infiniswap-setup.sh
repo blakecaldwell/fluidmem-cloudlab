@@ -44,10 +44,11 @@ prepare_infiniswap_ubuntu() {
   sudo apt-get update
   sudo apt-get remove -y kernel-mft-dkms || true
 
+
   if [[ "$UBUNTU_RELEASE" =~ "16.04" ]]; then
     sudo apt-get -y remove libosmcomp3 libibumad3 rdmacm-utils libmthca1 libibmad5 libipathverbs1
     sudo apt-get remove -y ibverbs-utils libibverbs-dev libibverbs1 librdmacm-dev libmlx4-dev libmlx4-1 librdmacm1
-    MLNX_OFED="MLNX_OFED_LINUX-4.1-1.0.2.0-ubuntu16.04-x86_64.tgz"
+    MLNX_OFED="MLNX_OFED_LINUX-4.1-1.0.2.0-ubuntu16.04-x86_64"
     wget https://www.dropbox.com/s/qupcryelg7yyk42/${MLNX_OFED}.tgz?dl=1 -O ${MLNX_OFED}.tgz
   elif [[ "$UBUNTU_RELEASE" =~ "14.04" ]]; then
     sudo apt-get -y remove libibnetdisc5

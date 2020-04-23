@@ -19,12 +19,12 @@ build_kernel_ubuntu() {
   set -e
   echo "**************************************************"
 
-  echo "Building Linux kernel 4.20 with userfaultfd extensions..." 
+  echo "Building Linux kernel 5.1 with userfaultfd extensions..."
   cd $HOME
-  KERNEL_VERSION="4.20-rc7"
+  KERNEL_VERSION="5.1"
   git clone https://github.com/blakecaldwell/userfault-kernel.git
-  wget https://raw.githubusercontent.com/blakecaldwell/fluidmem-cloudlab/master/setup/kernel-config-4.20 &> /dev/null
-  cp kernel-config-4.20 userfault-kernel/.config
+  wget https://raw.githubusercontent.com/blakecaldwell/fluidmem-cloudlab/master/setup/kernel-config-5.1 &> /dev/null
+  cp kernel-config-5.1 userfault-kernel/.config
   cd userfault-kernel
   git checkout userfault_${KERNEL_VERSION}
   make olddefconfig
@@ -39,7 +39,7 @@ install_kernel_ubuntu() {
 
   echo "Installing Linux kernel 4.20 with userfaultfd extensions..."
   cd $HOME
-  sudo dpkg -i linux-*+_4.20.0-rc7-scaleos+*.deb linux-libc-dev_*.deb
+  sudo dpkg -i linux-*5.1*.deb
   sudo update-grub
   sudo sed -i 's/\(^GRUB_CMDLINE_LINUX=.*\)"$/\1 nosmt"/' /etc/default/grub
   sudo grub-mkconfig -o /boot/grub/grub.cfg

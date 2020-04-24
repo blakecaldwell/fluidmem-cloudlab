@@ -105,10 +105,11 @@ fi
 
 cd $HOME
 if [[ ! -e /opt/.kernel-installed ]]; then
-  git clone https://bcaldwell@bitbucket.org/jisooy/pmbench.git
+  BRANCH=single_access_per_page
 else
-  git clone --branch userfault https://github.com/blakecaldwell/pmbench.git
+  BRANCH=userfault
 fi
+git clone --branch $BRANCH https://github.com/blakecaldwell/pmbench.git
 cd pmbench
 make pmbench
 set +e

@@ -11,16 +11,6 @@ echo "*********************************"
 echo "Starting FluidMem install"
 echo "*********************************"
 
-if [[ $EUID -eq 0 ]]; then
-  HOME=/root
-fi
-
-[[ $HOME ]] || {
-  HOME=/opt
-  sudo chmod o+rwx /opt
-  sudo chown $USER /opt
-}
-
 if [[ "$(uname -m)" =~ aarch64.* ]]; then
   echo "**************************************************"
   echo "WARNING: FluidMem will not compile on ARM. Proceeding anyway"
@@ -33,13 +23,15 @@ elif [[ "$(cat /etc/lsb-release | grep DISTRIB_ID)" =~ .*Ubuntu.* ]]; then
   NOBODY_USR_GRP="nobody:nogroup"
 fi
 
+sudo chmod 777 /opt
+
 if [ -n "$SSD" ] && [ -e /dev/$SSD ]; then
   BUILD_DIR=/ssd/build/fluidmem
   sudo mkdir -p $BUILD_DIR
   sudo chown $USER:$(id -g) $BUILD_DIR
-  ln -s $BUILD_DIR $HOME/fluidmem
+  ln -s $BUILD_DIR /opt/fluidmem
 else
-  BUILD_DIR=$HOME/fluidmem	
+  BUILD_DIR=/opt/fluidmem	
   mkdir $BUILD_DIR
 fi
 
@@ -49,12 +41,10 @@ build_fluidmem () {
   git clone https://github.com/blakecaldwell/fluidmem.git ${BUILD_DIR}
   cd ${BUILD_DIR}
   git checkout master
-  if [ -d $HOME/RAMCloud ]; then
-    RAMCLOUD_BASE=$HOME/RAMCloud
-  elif [ -d /opt/RAMCloud ]; then
+  if [ -d /opt/RAMCloud ]; then
     RAMCLOUD_BASE=/opt/RAMCloud
   else
-    die "Could not find RAMCloud source sirectory in $HOME or /opt"
+    die "Could not find RAMCloud source sirectory in /opt"
   fi
   export CPPFLAGS="-I${RAMCLOUD_BASE}/src -I/usr/include/ramcloud"
   export LDFLAGS="-L/usr/lib/ramcloud"

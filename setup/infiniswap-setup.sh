@@ -13,15 +13,7 @@ echo "*********************************"
 
 NAME=$(hostname|cut -d'.' -f1)
 
-if [[ $EUID -eq 0 ]]; then
-  HOME=/root
-fi
-
-[[ $HOME ]] || {
-  HOME=/opt
-  sudo chmod o+rwx /opt
-  sudo chown $USER /opt
-}
+sudo chmod 777 /opt
 
 if [[ "$(cat /etc/redhat-release)" =~ CentOS.* ]]; then
   NOBODY_USR_GRP="nobody:nobody"
@@ -33,39 +25,71 @@ if [ -n "$SSD" ] && [ -e /dev/$SSD ]; then
   BUILD_DIR=/ssd/build/Infiniswap
   sudo mkdir -p $BUILD_DIR
   sudo chown $USER:$(id -g) $BUILD_DIR
-  ln -s $BUILD_DIR $HOME/Infiniswap
+  ln -s $BUILD_DIR /opt/Infiniswap
 else
-  BUILD_DIR=$HOME/Infiniswap
+  BUILD_DIR=/opt/Infiniswap
   mkdir $BUILD_DIR
 fi
 
 prepare_infiniswap_ubuntu() {
-  set -e
+  if [ -e /opt/.mlnx-installed ]; then
+    echo "MLNX OFED already installed"
+    return
+  fi
+
+  set +e
   sudo apt-get update
   sudo apt-get remove -y kernel-mft-dkms || true
 
-
+  command cd /opt
   if [[ "$UBUNTU_RELEASE" =~ "16.04" ]]; then
-    sudo apt-get -y remove libosmcomp3 libibumad3 rdmacm-utils libmthca1 libibmad5 libipathverbs1
-    sudo apt-get remove -y ibverbs-utils libibverbs-dev libibverbs1 librdmacm-dev libmlx4-dev libmlx4-1 librdmacm1
-    MLNX_OFED="MLNX_OFED_LINUX-4.1-1.0.2.0-ubuntu16.04-x86_64"
-    wget https://www.dropbox.com/s/qupcryelg7yyk42/${MLNX_OFED}.tgz?dl=1 -O ${MLNX_OFED}.tgz
+    sudo apt-get -y remove libosmcomp3 libibumad3 rdmacm-utils libmthca1 libibmad5 libipathverbs1 || true
+    sudo apt-get -y remove ibverbs-utils libibverbs-dev libibverbs1 librdmacm-dev libmlx4-dev libmlx4-1 librdmacm1 || true
+    MLNX_OFED="MLNX_OFED_SRC-debian-4.1-1.0.2.0"
+    echo "Downloading ${MLNX_OFED}.tgz"
+    wget http://www.mellanox.com/downloads/ofed/MLNX_OFED-4.1-1.0.2.0/${MLNX_OFED}.tgz -O ${MLNX_OFED}.tgz
   elif [[ "$UBUNTU_RELEASE" =~ "14.04" ]]; then
-    sudo apt-get -y remove libibnetdisc5
-    MLNX_OFED="MLNX_OFED_LINUX-3.4-1.0.0.0-ubuntu14.04-x86_64"
-    wget https://www.dropbox.com/s/op43xec3nx2cxzf/${MLNX_OFED}.tgz?dl=1 -O ${MLNX_OFED}.tgz
+    sudo apt-get -y remove libibnetdisc5 || true
+    MLNX_OFED="MLNX_OFED_SRC-debian-3.4-1.0.0.0"
+    echo "Downloading ${MLNX_OFED}.tgz"
+    wget http://www.mellanox.com/downloads/ofed/MLNX_OFED-3.4-1.0.0.0/${MLNX_OFED}.tgz -O ${MLNX_OFED}.tgz
   fi
 
   tar -xf ${MLNX_OFED}.tgz
-  cd ${MLNX_OFED}/
+  command cd $(echo ${MLNX_OFED} | sed 's/debian-//')
 
-  sudo ./mlnxofedinstall --add-kernel-support --without-dkms
-  sudo rmmod mlx5_fpga_tools
-  sudo /etc/init.d/openibd restart
+  echo "Installing $(echo ${MLNX_OFED} | sed 's/debian-//')"
+  if [[ "$UBUNTU_RELEASE" =~ "16.04" ]]; then
+    sudo ./install.pl --without-dkms --without-ucx --without-libdapl2 --without-openmpi \
+        --without-ibsim --without-iser-modules --without-isert-modules --without-libmlx5-1 \
+        --without-mstflint --without-ibsim-doc --without-dapl2-utils --without-srptools \
+        --without-srp-modules --without-mlnx-rdma-rxe-modules --without-librxe-1 \
+        --without-mlnx-ethtool --without-knem-modules
+  elif [[ "$UBUNTU_RELEASE" =~ "14.04" ]]; then
+    # dkms works fine with kernel 4.13
+    sudo ./install.pl --without-ucx --without-libdapl2 --without-openmpi \
+        --without-ibsim --without-iser-modules --without-isert-modules --without-libmlx5-1 \
+        --without-mstflint --without-ibsim-doc --without-dapl2-utils --without-srptools \
+        --without-srp-modules --without-mlnx-rdma-rxe-modules --without-librxe-1 \
+        --without-mlnx-ethtool --without-knem-modules
+  fi
   set +e
+  sudo /etc/init.d/openibd restart
+  sudo touch /opt/.mlnx-installed
+  echo "*********************************"
+  echo "Finished installing MLNX OFED"
+  echo "*********************************"
+
+  echo "Rebooting..."
+  sudo reboot
 }
 
 build_infiniswap() {
+  if [ -e /opt/.infiniswap-built ]; then
+    echo "Already built infiniswap"
+    return
+  fi
+
   set -e
   git config --global user.email "you@example.com"
   git config --global user.name "Your Name"
@@ -91,8 +115,12 @@ build_infiniswap() {
     cd ${BUILD_DIR}/infiniswap_daemon
     ./autogen.sh
     ./configure $OPTIONS
-     make -j2
+     make -j10
   else
+    cd ${BUILD_DIR}/setup
+
+
+
     OPTIONS="--enable-max_page_num=1 \
       --enable-bio_page_cap=32 \
       --enable-max_remote_memory=32 \
@@ -101,14 +129,14 @@ build_infiniswap() {
       --enable-backup_disk=/dev/sdb \
       --enable-num_server_select=1"
 
-   cd ${BUILD_DIR}/infiniswap_bd
+    cd ${BUILD_DIR}/infiniswap_bd
     ./autogen.sh
     if [[ "$UBUNTU_RELEASE" =~ "16.04" ]]; then
       ./configure $OPTIONS --enable-lookup_bdev
     else
       ./configure $OPTIONS
     fi
-    make -j2
+    make -j10
     sudo make install
 
     HOSTS=$(cat /etc/hosts|grep cp-|grep -v cp-1|awk '{print $4}'|sort)
@@ -122,6 +150,10 @@ build_infiniswap() {
 #$(for each in $HOSTS; do echo "$(grep $each /etc/hosts|awk '{print $1}'):9400"; done)
 #EOF
   fi
+  sudo touch /opt/.infiniswap-built
+  echo "*********************************"
+  echo "Finished building Infiniswap"
+  echo "*********************************"
 
   set +e
 }
@@ -150,9 +182,11 @@ if [[ "$(cat /etc/lsb-release | grep DISTRIB_ID)" =~ .*Ubuntu.* ]]; then
   if [ -z $UBUNTU_RELEASE ]; then
     die "Error: could not detect Ubuntu release from /etc/lsb-release"
   fi
+  set -x
   prepare_infiniswap_ubuntu
   build_infiniswap
   start_infiniswap
+  set +x
 fi
 
 

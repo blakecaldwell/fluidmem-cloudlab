@@ -13,69 +13,12 @@
 
 set -x
 
-FLAG="/opt/.usersetup"
-SETUPFLAG="/opt/.setup_in_process"
-mkdir /opt
-# FLAG will not exist on the *very* fist boot because
-# it is created here!
-if [ ! -f $SETUPFLAG ]; then
-   touch $SETUPFLAG
-   touch $FLAG
+if [ -e "/opt/.phase1_setup_complete" ]; then
+  echo "Phase 1 setup has already completed"
+  exit 0
 fi
 
-HOSTS=$(cat /etc/hosts|grep cp-|awk '{print $4}'|sort)
-let i=0
-for each in $HOSTS; do
-  (( i += 1 ))
-done
-
-cat <<EOF | tee /etc/profile.d/firstboot.sh > /dev/null
-#!/bin/bash
-
-if [ -f $SETUPFLAG ]; then
-  echo "*******************************************"
-  echo "Base setup in progress. Wait until complete"
-  echo "before installing any packages"
-  echo "*******************************************"
-
-elif [ -f $FLAG ]; then
-  if [ -z "$HOSTS" ]; then
-  # single host in cluster
-    echo "***********************************************************"
-    echo -e "Base setup complete"
-    echo -e "Run the following command to start second phase of setup.\n\
-/usr/local/bin/phase2-setup.sh [ kernel | ramcloud | fluidmem | docker | infiniswap | root | all ]"
-    echo "***********************************************************"
-
-  else
-
-    echo "***********************************************************************************"
-    echo -e "Base setup complete"
-    echo -e "Your cluster has the following hosts:\n\
-$HOSTS\n"
-    echo -e "Run the following command to start second phase of setup.\n\
-pdsh -w cp-[1-$i] /usr/local/bin/phase2-setup.sh [ kernel | ramcloud | docker| fluidmem | infiniswap | root | all ]"
-    echo "***********************************************************************************"
-
-  fi
-fi
-EOF
-chmod +x /etc/profile.d/firstboot.sh
-
-cp /tmp/setup/phase2-setup.sh /usr/local/bin/phase2-setup.sh
-cp /tmp/setup/kernel-setup.sh /usr/local/bin/kernel-setup.sh
-cp /tmp/setup/ramcloud-setup.sh /usr/local/bin/ramcloud-setup.sh
-cp /tmp/setup/fluidmem-setup.sh /usr/local/bin/fluidmem-setup.sh
-cp /tmp/setup/infiniswap-setup.sh /usr/local/bin/infiniswap-setup.sh
-cp /tmp/setup/docker-setup.sh /usr/local/bin/docker-setup.sh
-cp /tmp/setup/misc-setup.sh /usr/local/bin/misc-setup.sh
-
-chmod +x /usr/local/bin/phase2-setup.sh
-chmod +x /usr/local/bin/kernel-setup.sh
-chmod +x /usr/local/bin/ramcloud-setup.sh
-chmod +x /usr/local/bin/fluidmem-setup.sh
-chmod +x /usr/local/bin/docker-setup.sh
-chmod +x /usr/local/bin/misc-setup.sh
+chmod +x /opt/setup/*.sh
 
 # Any SSDs to use?
 SSD=$(lsblk -o NAME,MODEL|grep SSD | awk 'NR==1{print $1}')
@@ -87,7 +30,19 @@ if [ -n "$SSD" ] && [ -e /dev/$SSD ]; then
     mkdir /ssd/apt-cache && \
     echo "dir::cache::archives /ssd/apt-cache" > /etc/apt/apt.conf.d/10-ssd-cache
   export SSD
+  mkdir /mnt/second_drive
+  ln -s /ssd /mnt/second_drive
 else
+  if [ -e /dev/sdd ]; then
+    DEVICE=/dev/sdd
+  elif [ -e /dev/sdc ]; then
+    DEVICE=/dev/sdc
+  elif [ -e /dev/sdb ]; then
+    DEVICE=/dev/sdb
+  fi
+  mkdir /mnt/second_drive
+  mkfs.ext4 "$DEVICE" && \
+    mount "$DEVICE" /mnt/second_drive
   unset SSD 
 fi
 
@@ -176,4 +131,4 @@ done
 service ssh restart
 
 # done
-rm -f $SETUPFLAG
+touch "/opt/.phase1_setup_complete"

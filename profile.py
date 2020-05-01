@@ -9,15 +9,11 @@ import random
 
 # Don't want this as a param yet
 TBURL = "https://www.github.com/blakecaldwell/fluidmem-cloudlab/raw/master/setup.tar.gz"
-KERNEL_TBCMD = "if [ -e /tmp/setup/phase1-setup.sh ]; then sudo mkdir -p /root/setup && sudo -H /tmp/setup/phase1-setup.sh 2>&1 | sudo tee -a /root/setup/phase1-setup.log.$(date +'%Y%m%d%H%M%S') && \
-            /usr/local/bin/phase2-setup.sh kernel 2>&1 | sudo tee -a /root/setup/phase2-setup.log; \
-         else /usr/local/bin/phase2-setup.sh ramcloud 2>&1 | sudo tee -a /root/setup/phase2-setup.log; \
-           /usr/local/bin/phase2-setup.sh fluidmem 2>&1 | sudo tee -a /root/setup/phase2-setup.log; \
-           /usr/local/bin/phase2-setup.sh misc 2>&1 | sudo tee -a /root/setup/phase2-setup.log; fi"
-TBCMD = "if [ -e /tmp/setup/phase1-setup.sh ]; then sudo mkdir -p /root/setup && sudo -H /tmp/setup/phase1-setup.sh 2>&1 | sudo tee -a /root/setup/phase1-setup.log.$(date +'%Y%m%d%H%M%S') && \
-         /usr/local/bin/phase2-setup.sh infiniswap 2>&1 | sudo tee -a /root/setup/phase2-setup.log ; \
-         /usr/local/bin/phase2-setup.sh misc 2>&1 | sudo tee -a /root/setup/phase2-setup.log; fi"
 
+BASE_CMD = "/opt/setup/setup.sh base | sudo tee -a /opt/setup/setup.log"
+FLUIDMEM_CMD = "/opt/setup/setup.sh base fluidmem | sudo tee -a /opt/setup/setup.log"
+INFINISWAP_CMD = "/opt/setup/setup.sh base infiniswap | sudo tee -a /opt/setup/setup.log"
+COMBINED_CMD = "/opt/setup/setup.sh base fluidmem infiniswap | sudo tee -a /opt/setup/setup.log"
 #
 # Create our in-memory model of the RSpec -- the resources we're going to request
 # in our experiment, and their configuration.
@@ -30,10 +26,12 @@ request = portal.context.makeRequestRSpec()
 #
 portal.context.defineParameter("computeNodeCount", "Number of compute nodes",
                    portal.ParameterType.INTEGER, 1)
-portal.context.defineParameter("upgradeKernel", "Upgrade kernel to FluidMem?",
+portal.context.defineParameter("FluidMem", "Install FluidMem?",
                    portal.ParameterType.BOOLEAN, True)
+portal.context.defineParameter("Infiniswap", "Install Infiniswap?",
+                   portal.ParameterType.BOOLEAN, False)
 portal.context.defineParameter("hardwareType","Hardware Type",
-                   portal.ParameterType.STRING,"c6220",[("r320","r320 APT"), ("c6220","c6220 APT"),("c6320","c6320 Clemson"),("d6515","d6515 Utah")],
+                   portal.ParameterType.STRING,"c6220",[("c6220","c6220 APT"),("r320","r320 APT"),("c6320","c6320 Clemson"),("d6515","d6515 Utah")],
                    longDescription="Hardware type to request. All have Infiniband.")
 portal.context.defineParameter("archType","Architecture Type",
                    portal.ParameterType.STRING,"x86_64",[("arm","ARM"),("x86_64","Intel x86_64")],
@@ -193,11 +191,15 @@ for cpname in computeNodeNames:
                                            get_netmask(mgmtlan.client_id)))
             pass
         pass
-    cpnode.addService(rspec.Install(url=TBURL, path="/tmp"))
-    if params.upgradeKernel: 
-      cpnode.addService(rspec.Execute(shell="sh",command=KERNEL_TBCMD))
+    cpnode.addService(rspec.Install(url=TBURL, path="/opt/"))
+    if params.FluidMem and params.Infiniswap: 
+      cpnode.addService(rspec.Execute(shell="sh",command=COMBINED_CMD))
+    elif params.FluidMem: 
+      cpnode.addService(rspec.Execute(shell="sh",command=FLUIDMEM_CMD))
+    elif params.Infiniswap:
+      cpnode.addService(rspec.Execute(shell="sh",command=INFINISWAP_CMD))
     else:
-      cpnode.addService(rspec.Execute(shell="sh",command=TBCMD))
+      cpnode.addService(rspec.Execute(shell="sh",command=BASE_CMD))
     request.addResource(cpnode)
     computeNodeList += cpname + ' '
     pass

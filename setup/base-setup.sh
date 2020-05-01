@@ -11,15 +11,7 @@ echo "*********************************"
 echo "Starting misc install"
 echo "*********************************"
 
-if [[ $EUID -eq 0 ]]; then
-  HOME=/root
-fi
-
-[[ $HOME ]] || {
-  HOME=/opt
-  sudo chmod o+rwx /opt
-  sudo chown $USER /opt
-}
+sudo chmod 777 /opt
 
 set -e
 if [[ "$(cat /etc/redhat-release)" =~ CentOS.* ]]; then
@@ -38,7 +30,7 @@ elif [[ "$(cat /etc/lsb-release | grep DISTRIB_ID)" =~ .*Ubuntu.* ]]; then
   sudo apt-get install -y cgroup-bin cgroup-lite libcgroup1
   sudo cgcreate -g memory:/myGroup
   sudo cgset -r memory.limit_in_bytes=10m myGroup
-  echo "*:pmbench memory myGroup" | sudo tee /etc/cgrules.conf
+  echo "*:pmbench memory myGroup" | sudo tee /etc/cgrules.conf > /dev/null
 
   cat <<EOF | sudo tee /etc/cgconfig.conf > /dev/null
 # Since systemd is working well, this section may not be necessary.
@@ -103,7 +95,7 @@ EOF
   sudo cgrulesengd
 fi
 
-cd $HOME
+cd /opt
 if [[ ! -e /opt/.kernel-installed ]]; then
   BRANCH=single_access_per_page
 else

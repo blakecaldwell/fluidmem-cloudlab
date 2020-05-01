@@ -11,15 +11,7 @@ echo "*********************************"
 echo "Starting RAMCloud install"
 echo "*********************************"
 
-if [[ $EUID -eq 0 ]]; then
-  HOME=/root
-fi
-
-[[ $HOME ]] || {
-  HOME=/opt
-  sudo chmod o+rwx /opt
-  sudo chown $USER /opt
-}
+sudo chmod 777 /opt
 
 if [[ "$(uname -m)" =~ aarch64.* ]]; then
   echo "**************************************************"
@@ -38,9 +30,9 @@ if [ -n "$SSD" ] && [ -e /dev/$SSD ]; then
   BUILD_DIR=/ssd/build/RAMCloud
   sudo mkdir -p $BUILD_DIR
   sudo chown $USER:$(id -g) $BUILD_DIR
-  ln -s $BUILD_DIR $HOME/RAMCloud
+  ln -s $BUILD_DIR /opt/RAMCloud
 else
-  BUILD_DIR=$HOME/RAMCloud
+  BUILD_DIR=/opt/RAMCloud
   mkdir $BUILD_DIR
 fi
 
